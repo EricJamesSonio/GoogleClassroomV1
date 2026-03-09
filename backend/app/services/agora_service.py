@@ -8,7 +8,7 @@ from app.models.class_member import ClassMember
 from app.models.user import User
 
 try:
-    from agora_token_builder import RtcTokenBuilder, Role_Publisher
+    from agora_token_builder.RtcTokenBuilder import RtcTokenBuilder, Role_Publisher
     AGORA_AVAILABLE = True
 except ImportError:
     AGORA_AVAILABLE = False
