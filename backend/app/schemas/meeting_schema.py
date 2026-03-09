@@ -26,3 +26,19 @@ class MeetingResponse(BaseModel):
     agora_channel: str
     recording_url: Optional[str] = None
     created_at: datetime
+
+
+# ── Meeting Invitation Schemas ────────────────────────────────
+
+class InviteToMeetingRequest(BaseModel):
+    user_ids: List[str]  # list of student user ids to invite
+
+
+class MeetingInvitationResponse(BaseModel):
+    id: str
+    meeting_id: str
+    meeting_title: str
+    user_id: str
+    invited_by: str
+    status: str
+    created_at: datetime
