@@ -2,10 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import AgoraRTC from 'agora-rtc-sdk-ng'
-import {
-  getMeeting, getAgoraToken, endMeeting,
-  startRecording, stopRecording,
-} from '../../api/meetings'
+import { getMeeting, getAgoraToken, endMeeting } from '../../api/meetings'
 import useAuthStore from '../../store/authStore'
 
 export default function MeetingRoomPage() {
@@ -14,8 +11,7 @@ export default function MeetingRoomPage() {
   const navigate = useNavigate()
   const isEducator = user?.role === 'educator'
 
-  // ── Meeting data ──────────────────────────────────────────
-  const { data: meeting, isLoading, refetch } = useQuery({
+  const { data: meeting, isLoading } = useQuery({
     queryKey: ['meeting', meetingId],
     queryFn: () => getMeeting(meetingId).then((r) => r.data),
     refetchInterval: (data) => data?.status === 'scheduled' ? 5000 : false,
@@ -55,22 +51,13 @@ export default function MeetingRoomPage() {
         await client.subscribe(remoteUser, mediaType)
         setRemoteUsers((prev) => {
           const exists = prev.find((u) => u.uid === remoteUser.uid)
-          return exists
-            ? prev.map((u) => u.uid === remoteUser.uid ? remoteUser : u)
-            : [...prev, remoteUser]
+          return exists ? prev.map((u) => u.uid === remoteUser.uid ? remoteUser : u) : [...prev, remoteUser]
         })
-        if (mediaType === 'video') {
-          setTimeout(() => remoteUser.videoTrack?.play(`remote-${remoteUser.uid}`), 100)
-        }
+        if (mediaType === 'video') setTimeout(() => remoteUser.videoTrack?.play(`remote-${remoteUser.uid}`), 100)
         if (mediaType === 'audio') remoteUser.audioTrack?.play()
       })
-
-      client.on('user-unpublished', (remoteUser) => {
-        setRemoteUsers((prev) => prev.filter((u) => u.uid !== remoteUser.uid))
-      })
-      client.on('user-left', (remoteUser) => {
-        setRemoteUsers((prev) => prev.filter((u) => u.uid !== remoteUser.uid))
-      })
+      client.on('user-unpublished', (u) => setRemoteUsers((prev) => prev.filter((r) => r.uid !== u.uid)))
+      client.on('user-left', (u) => setRemoteUsers((prev) => prev.filter((r) => r.uid !== u.uid)))
 
       await client.join(app_id, channel, token, uid)
       const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks()
@@ -79,7 +66,6 @@ export default function MeetingRoomPage() {
       if (localVideoRef.current) videoTrack.play(localVideoRef.current)
       setJoined(true)
     } catch (err) {
-      console.error(err)
       setAgoraError(err.message || 'Failed to join video')
     }
   }, [client, meetingId])
@@ -89,69 +75,21 @@ export default function MeetingRoomPage() {
   }, [meeting?.status, joined, joinVideo])
 
   useEffect(() => {
-    return () => {
-      localTracks.audio?.close()
-      localTracks.video?.close()
-      client.leave()
-    }
+    return () => { localTracks.audio?.close(); localTracks.video?.close(); client.leave() }
   }, [])
 
-  const toggleMic = async () => {
-    if (localTracks.audio) {
-      await localTracks.audio.setEnabled(!micOn)
-      setMicOn(!micOn)
-    }
-  }
-
-  const toggleCam = async () => {
-    if (localTracks.video) {
-      await localTracks.video.setEnabled(!camOn)
-      setCamOn(!camOn)
-    }
-  }
+  const toggleMic = async () => { if (localTracks.audio) { await localTracks.audio.setEnabled(!micOn); setMicOn(!micOn) } }
+  const toggleCam = async () => { if (localTracks.video) { await localTracks.video.setEnabled(!camOn); setCamOn(!camOn) } }
 
   const leaveVideo = async () => {
-    localTracks.audio?.close()
-    localTracks.video?.close()
+    localTracks.audio?.close(); localTracks.video?.close()
     await client.leave()
-    setJoined(false)
-    setLocalTracks({ audio: null, video: null })
-    setRemoteUsers([])
+    setJoined(false); setLocalTracks({ audio: null, video: null }); setRemoteUsers([])
   }
 
-  // ── End meeting ───────────────────────────────────────────
   const endMeetingMutation = useMutation({
     mutationFn: () => endMeeting(meetingId),
-    onSuccess: async () => {
-      await leaveVideo()
-      navigate(-1)
-    },
-  })
-
-  // ── Recording ─────────────────────────────────────────────
-  const [isRecording, setIsRecording] = useState(false)
-  const [recordingUrl, setRecordingUrl] = useState(meeting?.recording_url || null)
-  const [recordingMsg, setRecordingMsg] = useState('')
-
-  const startRecMutation = useMutation({
-    mutationFn: () => startRecording(meetingId),
-    onSuccess: () => {
-      setIsRecording(true)
-      setRecordingMsg('Recording started')
-      setTimeout(() => setRecordingMsg(''), 3000)
-    },
-    onError: (err) => setRecordingMsg(err.response?.data?.detail || 'Failed to start recording'),
-  })
-
-  const stopRecMutation = useMutation({
-    mutationFn: () => stopRecording(meetingId),
-    onSuccess: (res) => {
-      setIsRecording(false)
-      setRecordingUrl(res.data.recording_url)
-      setRecordingMsg('Recording saved!')
-      setTimeout(() => setRecordingMsg(''), 4000)
-    },
-    onError: (err) => setRecordingMsg(err.response?.data?.detail || 'Failed to stop recording'),
+    onSuccess: async () => { await leaveVideo(); navigate(-1) },
   })
 
   // ── WebSocket chat ────────────────────────────────────────
@@ -169,23 +107,16 @@ export default function MeetingRoomPage() {
     ws.onopen = () => setWsConnected(true)
     ws.onmessage = (e) => {
       const data = JSON.parse(e.data)
-      if (data.type === 'history') {
-        setMessages(data.messages || [])
-        setOnlineUsers(data.online_users || [])
-      } else if (data.type === 'message') {
-        setMessages((prev) => [...prev, data])
-      } else if (data.type === 'user_joined' || data.type === 'user_left') {
-        setOnlineUsers(data.online_users || [])
-      }
+      if (data.type === 'history') { setMessages(data.messages || []); setOnlineUsers(data.online_users || []) }
+      else if (data.type === 'message') setMessages((prev) => [...prev, data])
+      else if (data.type === 'user_joined' || data.type === 'user_left') setOnlineUsers(data.online_users || [])
     }
     ws.onclose = () => setWsConnected(false)
     ws.onerror = () => setWsConnected(false)
     return () => ws.close()
   }, [meeting?.status, meetingId, jwt])
 
-  useEffect(() => {
-    chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  useEffect(() => { chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
   const sendMessage = () => {
     if (!chatInput.trim() || !wsRef.current) return
@@ -193,16 +124,8 @@ export default function MeetingRoomPage() {
     setChatInput('')
   }
 
-  const handleChatKey = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
-  }
-
-  // ── States: loading / scheduled / ended ──────────────────
-  if (isLoading) return (
-    <div style={styles.fullCenter}>
-      <div style={styles.loadingText}>Loading meeting...</div>
-    </div>
-  )
+  // ── Screens ───────────────────────────────────────────────
+  if (isLoading) return <div style={styles.fullCenter}><div style={styles.loadingText}>Loading meeting...</div></div>
 
   if (meeting?.status === 'ended') return (
     <div style={styles.fullCenter}>
@@ -210,11 +133,6 @@ export default function MeetingRoomPage() {
         <div style={{ fontSize: '48px', marginBottom: '16px' }}>🏁</div>
         <h2 style={styles.endedTitle}>Meeting Ended</h2>
         <p style={styles.endedSub}>{meeting.title}</p>
-        {meeting.recording_url && (
-          <a href={meeting.recording_url} target="_blank" rel="noreferrer" style={styles.recordingLink}>
-            🎬 View Recording
-          </a>
-        )}
         <button style={styles.btnPrimary} onClick={() => navigate(-1)}>← Go Back</button>
       </div>
     </div>
@@ -234,12 +152,8 @@ export default function MeetingRoomPage() {
   )
 
   // ── Live room ─────────────────────────────────────────────
-  const allParticipants = remoteUsers.length + (joined ? 1 : 0)
-
   return (
     <div style={styles.room}>
-
-      {/* Top bar */}
       <div style={styles.topBar}>
         <div style={styles.topLeft}>
           <div style={styles.liveDot} />
@@ -247,75 +161,29 @@ export default function MeetingRoomPage() {
           <span style={styles.meetingTitle}>{meeting?.title}</span>
         </div>
         <div style={styles.topRight}>
-          {/* Recording indicator */}
-          {isRecording && (
-            <div style={styles.recIndicator}>
-              <div style={styles.recDot} />
-              <span style={styles.recLabel}>REC</span>
-            </div>
-          )}
-          {recordingMsg && <span style={styles.recMsg}>{recordingMsg}</span>}
-          {recordingUrl && !isRecording && (
-            <a href={recordingUrl} target="_blank" rel="noreferrer" style={styles.recLink}>
-              🎬 Recording
-            </a>
-          )}
-          <span style={styles.participantCount}>👥 {allParticipants}</span>
+          <span style={styles.participantCount}>👥 {remoteUsers.length + (joined ? 1 : 0)}</span>
           {isEducator && (
-            <>
-              {!isRecording ? (
-                <button
-                  style={styles.recBtn}
-                  onClick={() => startRecMutation.mutate()}
-                  disabled={startRecMutation.isPending}
-                >
-                  ⏺ Record
-                </button>
-              ) : (
-                <button
-                  style={styles.recStopBtn}
-                  onClick={() => stopRecMutation.mutate()}
-                  disabled={stopRecMutation.isPending}
-                >
-                  ⏹ Stop Rec
-                </button>
-              )}
-              <button
-                style={styles.endBtn}
-                onClick={() => { if (confirm('End meeting for everyone?')) endMeetingMutation.mutate() }}
-              >
-                End Meeting
-              </button>
-            </>
+            <button style={styles.endBtn} onClick={() => { if (confirm('End meeting for everyone?')) endMeetingMutation.mutate() }}>
+              End Meeting
+            </button>
           )}
           {!isEducator && (
-            <button style={styles.leaveBtn} onClick={() => { leaveVideo(); navigate(-1) }}>
-              Leave
-            </button>
+            <button style={styles.leaveBtn} onClick={() => { leaveVideo(); navigate(-1) }}>Leave</button>
           )}
         </div>
       </div>
 
       <div style={styles.body}>
-        {/* Video area */}
+        {/* Video */}
         <div style={styles.videoSection}>
           {agoraError && <div style={styles.agoraError}>⚠️ {agoraError}</div>}
           {!joined && !agoraError && (
             <div style={styles.joiningOverlay}>
               <div style={styles.spinner} />
-              <p style={{ color: 'rgba(255,255,255,0.6)', marginTop: '16px', fontFamily: "'Arial', sans-serif" }}>
-                Connecting to video...
-              </p>
+              <p style={{ color: 'rgba(255,255,255,0.6)', marginTop: '16px', fontFamily: "'Arial', sans-serif" }}>Connecting to video...</p>
             </div>
           )}
-
-          <div style={{
-            ...styles.videoGrid,
-            gridTemplateColumns: remoteUsers.length === 0
-              ? '1fr'
-              : remoteUsers.length <= 1 ? '1fr 1fr'
-              : 'repeat(3, 1fr)',
-          }}>
+          <div style={{ ...styles.videoGrid, gridTemplateColumns: remoteUsers.length === 0 ? '1fr' : remoteUsers.length <= 1 ? '1fr 1fr' : 'repeat(3, 1fr)' }}>
             <div style={styles.videoTile}>
               <div ref={localVideoRef} style={styles.videoEl} />
               {!camOn && <div style={styles.camOffOverlay}>📷 Camera off</div>}
@@ -331,22 +199,12 @@ export default function MeetingRoomPage() {
               </div>
             ))}
           </div>
-
-          {/* Controls */}
           <div style={styles.controls}>
-            <button
-              style={{ ...styles.controlBtn, ...(micOn ? {} : styles.controlBtnOff) }}
-              onClick={toggleMic}
-            >
-              {micOn ? '🎤' : '🔇'}
-              <span style={styles.controlLabel}>{micOn ? 'Mute' : 'Unmute'}</span>
+            <button style={{ ...styles.controlBtn, ...(micOn ? {} : styles.controlBtnOff) }} onClick={toggleMic}>
+              {micOn ? '🎤' : '🔇'}<span style={styles.controlLabel}>{micOn ? 'Mute' : 'Unmute'}</span>
             </button>
-            <button
-              style={{ ...styles.controlBtn, ...(camOn ? {} : styles.controlBtnOff) }}
-              onClick={toggleCam}
-            >
-              {camOn ? '📷' : '🚫'}
-              <span style={styles.controlLabel}>{camOn ? 'Cam Off' : 'Cam On'}</span>
+            <button style={{ ...styles.controlBtn, ...(camOn ? {} : styles.controlBtnOff) }} onClick={toggleCam}>
+              {camOn ? '📷' : '🚫'}<span style={styles.controlLabel}>{camOn ? 'Cam Off' : 'Cam On'}</span>
             </button>
           </div>
         </div>
@@ -357,20 +215,13 @@ export default function MeetingRoomPage() {
             <span style={styles.onlineTitle}>Online ({onlineUsers.length})</span>
             <div style={styles.onlineAvatars}>
               {onlineUsers.slice(0, 5).map((u) => (
-                <div key={u.user_id} style={styles.onlineAvatar} title={u.name}>
-                  {u.name?.[0]}
-                </div>
+                <div key={u.user_id} style={styles.onlineAvatar} title={u.name}>{u.name?.[0]}</div>
               ))}
-              {onlineUsers.length > 5 && (
-                <div style={styles.onlineMore}>+{onlineUsers.length - 5}</div>
-              )}
+              {onlineUsers.length > 5 && <div style={styles.onlineMore}>+{onlineUsers.length - 5}</div>}
             </div>
           </div>
-
           <div style={styles.messages}>
-            {messages.length === 0 && (
-              <div style={styles.noMessages}>No messages yet. Say hi! 👋</div>
-            )}
+            {messages.length === 0 && <div style={styles.noMessages}>No messages yet. Say hi! 👋</div>}
             {messages.map((msg, i) => {
               const isMe = msg.sender_id === user?.id
               return (
@@ -379,16 +230,13 @@ export default function MeetingRoomPage() {
                   <div style={{ ...styles.msgBubble, ...(isMe ? styles.msgBubbleMe : {}) }}>
                     {!isMe && <div style={styles.msgSender}>{msg.sender_name}</div>}
                     <div style={styles.msgText}>{msg.message}</div>
-                    <div style={styles.msgTime}>
-                      {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
+                    <div style={styles.msgTime}>{new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                   </div>
                 </div>
               )
             })}
             <div ref={chatBottomRef} />
           </div>
-
           <div style={styles.chatInputRow}>
             <div style={{ ...styles.wsIndicator, background: wsConnected ? '#4ade80' : '#ff8080' }} />
             <input
@@ -396,11 +244,9 @@ export default function MeetingRoomPage() {
               placeholder="Type a message..."
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={handleChatKey}
+              onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
             />
-            <button style={styles.sendBtn} onClick={sendMessage} disabled={!chatInput.trim()}>
-              ➤
-            </button>
+            <button style={styles.sendBtn} onClick={sendMessage} disabled={!chatInput.trim()}>➤</button>
           </div>
         </div>
       </div>
@@ -410,20 +256,13 @@ export default function MeetingRoomPage() {
 
 const styles = {
   room: { display: 'flex', flexDirection: 'column', height: '100vh', background: '#0a0a14', color: '#fff', fontFamily: "'Arial', sans-serif" },
-  topBar: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0, flexWrap: 'wrap', gap: '10px' },
+  topBar: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 },
   topLeft: { display: 'flex', alignItems: 'center', gap: '12px' },
   liveDot: { width: '10px', height: '10px', borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px #4ade80', animation: 'pulse 1.5s infinite' },
   liveLabel: { fontSize: '11px', fontWeight: '800', color: '#4ade80', letterSpacing: '1px' },
   meetingTitle: { fontSize: '15px', fontWeight: '600', color: '#fff' },
-  topRight: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' },
+  topRight: { display: 'flex', alignItems: 'center', gap: '10px' },
   participantCount: { fontSize: '13px', color: 'rgba(255,255,255,0.5)' },
-  recIndicator: { display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(255,80,80,0.15)', border: '1px solid rgba(255,80,80,0.3)', borderRadius: '20px', padding: '4px 10px' },
-  recDot: { width: '8px', height: '8px', borderRadius: '50%', background: '#ff5050', animation: 'pulse 1s infinite' },
-  recLabel: { fontSize: '11px', fontWeight: '800', color: '#ff8080', letterSpacing: '1px' },
-  recMsg: { fontSize: '12px', color: '#4ade80' },
-  recLink: { fontSize: '12px', color: '#a78bfa', textDecoration: 'none', background: 'rgba(167,139,250,0.1)', padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(167,139,250,0.2)' },
-  recBtn: { background: 'rgba(255,80,80,0.15)', border: '1px solid rgba(255,80,80,0.3)', color: '#ff8080', borderRadius: '8px', padding: '7px 14px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Arial', sans-serif" },
-  recStopBtn: { background: 'rgba(255,80,80,0.3)', border: '1px solid rgba(255,80,80,0.5)', color: '#fff', borderRadius: '8px', padding: '7px 14px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Arial', sans-serif" },
   endBtn: { background: 'rgba(255,80,80,0.2)', border: '1px solid rgba(255,80,80,0.4)', color: '#ff8080', borderRadius: '8px', padding: '7px 16px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Arial', sans-serif" },
   leaveBtn: { background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '8px', padding: '7px 16px', fontSize: '13px', cursor: 'pointer', fontFamily: "'Arial', sans-serif" },
   body: { display: 'flex', flex: 1, overflow: 'hidden' },
@@ -469,7 +308,6 @@ const styles = {
   endedCard: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '48px 40px', textAlign: 'center', maxWidth: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' },
   endedTitle: { color: '#fff', fontSize: '22px', fontWeight: '700', margin: 0 },
   endedSub: { color: 'rgba(255,255,255,0.4)', fontSize: '14px', margin: 0 },
-  recordingLink: { background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.3)', color: '#a78bfa', borderRadius: '10px', padding: '10px 20px', fontSize: '14px', textDecoration: 'none', fontWeight: '600' },
   loadingText: { color: 'rgba(255,255,255,0.4)', fontSize: '16px' },
   btnPrimary: { background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', border: 'none', borderRadius: '10px', padding: '12px 24px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Arial', sans-serif" },
   btnSecondary: { background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '10px', padding: '12px 24px', fontSize: '14px', cursor: 'pointer', fontFamily: "'Arial', sans-serif" },
