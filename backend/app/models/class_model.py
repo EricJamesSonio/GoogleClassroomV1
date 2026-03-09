@@ -1,5 +1,4 @@
-from beanie import Document
-from bson import ObjectId
+from beanie import Document, PydanticObjectId
 from datetime import datetime, timezone
 from typing import Optional
 
@@ -7,7 +6,7 @@ from typing import Optional
 class Class(Document):
     name: str
     description: Optional[str] = None
-    educator_id: ObjectId
+    educator_id: PydanticObjectId
     cover_image_url: Optional[str] = None
     created_at: datetime = datetime.now(timezone.utc)
 

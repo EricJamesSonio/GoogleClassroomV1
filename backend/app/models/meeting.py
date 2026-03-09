@@ -1,12 +1,11 @@
-from beanie import Document
-from bson import ObjectId
+from beanie import Document, PydanticObjectId
 from datetime import datetime, timezone
 from typing import Optional
 
 
 class Meeting(Document):
-    class_id: ObjectId
-    created_by: ObjectId
+    class_id: PydanticObjectId
+    created_by: PydanticObjectId
     title: str
     status: str = "scheduled"  # "scheduled" | "live" | "ended"
     scheduled_at: datetime

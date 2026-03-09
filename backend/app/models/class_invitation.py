@@ -1,12 +1,11 @@
-from beanie import Document
-from bson import ObjectId
+from beanie import Document, PydanticObjectId
 from datetime import datetime, timezone
 
 
 class ClassInvitation(Document):
-    class_id: ObjectId
-    student_id: ObjectId
-    invited_by: ObjectId
+    class_id: PydanticObjectId
+    student_id: PydanticObjectId
+    invited_by: PydanticObjectId
     # "pending"   = educator invited student
     # "requested" = student requested to join
     # "accepted" | "rejected"
