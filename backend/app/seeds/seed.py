@@ -32,31 +32,31 @@ def run_seeds(db: Session):
     users = [
         User(
             name="John Smith",
-            email="john@classroom.dev",
+            email="edu1@classroom.dev",
             password_hash=pwd_context.hash("password123"),
             role=UserRole.educator,
         ),
         User(
             name="Jane Doe",
-            email="jane@classroom.dev",
+            email="edu2@classroom.dev",
             password_hash=pwd_context.hash("password123"),
             role=UserRole.educator,
         ),
         User(
             name="Alice Johnson",
-            email="alice@classroom.dev",
+            email="stud1@classroom.dev",
             password_hash=pwd_context.hash("password123"),
             role=UserRole.student,
         ),
         User(
             name="Bob Williams",
-            email="bob@classroom.dev",
+            email="stude2@classroom.dev",
             password_hash=pwd_context.hash("password123"),
             role=UserRole.student,
         ),
         User(
             name="Charlie Brown",
-            email="charlie@classroom.dev",
+            email="stud3@classroom.dev",
             password_hash=pwd_context.hash("password123"),
             role=UserRole.student,
         ),
@@ -195,5 +195,5 @@ def run_seeds(db: Session):
 
     print("\n🎉 Seeding complete!")
     print("\n📋 Sample accounts (password: password123)")
-    print("  Educators : john@classroom.dev | jane@classroom.dev")
-    print("  Students  : alice@classroom.dev | bob@classroom.dev | charlie@classroom.dev (pending)")
+    print("  Educators : edu1@classroom.dev | edu2@classroom.dev")
+    print("  Students  : stud1@classroom.dev | stud2@classroom.dev | stud3@classroom.dev (pending)")
