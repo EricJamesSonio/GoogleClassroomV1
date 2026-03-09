@@ -12,7 +12,7 @@ app = FastAPI(
 # CORS - allow frontend to talk to backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -21,13 +21,20 @@ app.add_middleware(
 
 @app.on_event("startup")
 def startup():
-    print("🚀 Starting up...")
-    init_db()       # creates tables if they don't exist
-    db = SessionLocal()
-    try:
-        run_seeds(db)   # inserts sample data if DB is empty
-    finally:
-        db.close()
+    print("🚀 Starting Classroom API...")
+    is_fresh = init_db()  # returns True if DB was just created, False if already existed
+
+    if is_fresh:
+        # Only seed on a brand new database
+        db = SessionLocal()
+        try:
+            run_seeds(db)
+        finally:
+            db.close()
+    else:
+        print("⏭️  Database exists — skipping init and seeding.")
+
+    print("✅ Ready.\n")
 
 
 @app.get("/")
