@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+beanie
+motor
+python-jose[cryptography]
+passlib[bcrypt]
+pydantic[email]
+pydantic-settings
+cloudinary
+python-dotenv
+apscheduler
