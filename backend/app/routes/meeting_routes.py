@@ -121,3 +121,15 @@ async def reject_req(
     educator: User = Depends(require_educator),
 ):
     return await reject_meeting_request(invitation_id, educator)
+
+
+# ── Agora Token ───────────────────────────────────────────────
+from app.services.agora_service import get_agora_token
+
+
+@router.get("/meetings/{meeting_id}/agora-token")
+async def agora_token(
+    meeting_id: str,
+    current_user: User = Depends(get_current_user),
+):
+    return await get_agora_token(meeting_id, current_user)

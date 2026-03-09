@@ -1,0 +1,95 @@
+import time
+import hashlib
+from fastapi import HTTPException
+from app.core.config import settings
+from app.models.meeting import Meeting
+from app.models.meeting_invitation import MeetingInvitation
+from app.models.class_member import ClassMember
+from app.models.user import User
+
+try:
+    from agora_token_builder import RtcTokenBuilder, Role_Publisher
+    AGORA_AVAILABLE = True
+except ImportError:
+    AGORA_AVAILABLE = False
+
+
+def _user_id_to_uid(user_id: str) -> int:
+    """Convert MongoDB ObjectId string to a numeric uid for Agora."""
+    return int(hashlib.md5(user_id.encode()).hexdigest()[:8], 16) % (2**31)
+
+
+async def _assert_can_join(meeting: Meeting, user: User):
+    """Check user is allowed to get a token for this meeting."""
+    if meeting.status != "live":
+        raise HTTPException(
+            status_code=400,
+            detail=f"Meeting is not live yet — status is '{meeting.status}'"
+        )
+
+    # Educator who created it can always join
+    if str(meeting.created_by) == str(user.id):
+        return
+
+    # Otherwise must have an accepted invitation OR be a class member
+    invitation = await MeetingInvitation.find_one(
+        MeetingInvitation.meeting_id == meeting.id,
+        MeetingInvitation.user_id == user.id,
+        MeetingInvitation.status == "accepted",
+    )
+    if invitation:
+        return
+
+    # Also allow if they were invited (status = "invited") — auto-accept on join
+    invited = await MeetingInvitation.find_one(
+        MeetingInvitation.meeting_id == meeting.id,
+        MeetingInvitation.user_id == user.id,
+        MeetingInvitation.status == "invited",
+    )
+    if invited:
+        invited.status = "accepted"
+        await invited.save()
+        return
+
+    raise HTTPException(
+        status_code=403,
+        detail="You are not invited to this meeting"
+    )
+
+
+async def get_agora_token(meeting_id: str, current_user: User) -> dict:
+    meeting = await Meeting.get(meeting_id)
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+
+    await _assert_can_join(meeting, current_user)
+
+    uid = _user_id_to_uid(str(current_user.id))
+
+    if not AGORA_AVAILABLE or not settings.AGORA_APP_ID or not settings.AGORA_APP_CERT:
+        # Return a mock token for development if Agora keys not set yet
+        return {
+            "token": "dev_mock_token",
+            "channel": meeting.agora_channel,
+            "app_id": settings.AGORA_APP_ID or "dev_app_id",
+            "uid": uid,
+            "warning": "Agora keys not configured — using mock token for dev",
+        }
+
+    expiry = int(time.time()) + 3600  # token valid for 1 hour
+
+    token = RtcTokenBuilder.buildTokenWithUid(
+        settings.AGORA_APP_ID,
+        settings.AGORA_APP_CERT,
+        meeting.agora_channel,
+        uid,
+        Role_Publisher,
+        expiry,
+    )
+
+    return {
+        "token": token,
+        "channel": meeting.agora_channel,
+        "app_id": settings.AGORA_APP_ID,
+        "uid": uid,
+    }
