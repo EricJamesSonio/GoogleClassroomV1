@@ -2,7 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation } from '@tanstack/react-query'
 import AgoraRTC from 'agora-rtc-sdk-ng'
-import { getMeeting, getAgoraToken, endMeeting, inviteAllToMeeting } from '../../api/meetings'
+import {
+  getMeeting, getAgoraToken, endMeeting,
+  startRecording, stopRecording,
+} from '../../api/meetings'
 import useAuthStore from '../../store/authStore'
 
 export default function MeetingRoomPage() {
@@ -12,13 +15,13 @@ export default function MeetingRoomPage() {
   const isEducator = user?.role === 'educator'
 
   // ── Meeting data ──────────────────────────────────────────
-  const { data: meeting, isLoading } = useQuery({
+  const { data: meeting, isLoading, refetch } = useQuery({
     queryKey: ['meeting', meetingId],
     queryFn: () => getMeeting(meetingId).then((r) => r.data),
     refetchInterval: (data) => data?.status === 'scheduled' ? 5000 : false,
   })
 
-  // ── Countdown state ───────────────────────────────────────
+  // ── Countdown ─────────────────────────────────────────────
   const [countdown, setCountdown] = useState('')
   useEffect(() => {
     if (!meeting || meeting.status !== 'scheduled') return
@@ -52,7 +55,9 @@ export default function MeetingRoomPage() {
         await client.subscribe(remoteUser, mediaType)
         setRemoteUsers((prev) => {
           const exists = prev.find((u) => u.uid === remoteUser.uid)
-          return exists ? prev.map((u) => u.uid === remoteUser.uid ? remoteUser : u) : [...prev, remoteUser]
+          return exists
+            ? prev.map((u) => u.uid === remoteUser.uid ? remoteUser : u)
+            : [...prev, remoteUser]
         })
         if (mediaType === 'video') {
           setTimeout(() => remoteUser.videoTrack?.play(`remote-${remoteUser.uid}`), 100)
@@ -63,17 +68,14 @@ export default function MeetingRoomPage() {
       client.on('user-unpublished', (remoteUser) => {
         setRemoteUsers((prev) => prev.filter((u) => u.uid !== remoteUser.uid))
       })
-
       client.on('user-left', (remoteUser) => {
         setRemoteUsers((prev) => prev.filter((u) => u.uid !== remoteUser.uid))
       })
 
       await client.join(app_id, channel, token, uid)
-
       const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks()
       setLocalTracks({ audio: audioTrack, video: videoTrack })
       await client.publish([audioTrack, videoTrack])
-
       if (localVideoRef.current) videoTrack.play(localVideoRef.current)
       setJoined(true)
     } catch (err) {
@@ -82,12 +84,10 @@ export default function MeetingRoomPage() {
     }
   }, [client, meetingId])
 
-  // Auto-join when meeting goes live
   useEffect(() => {
     if (meeting?.status === 'live' && !joined) joinVideo()
   }, [meeting?.status, joined, joinVideo])
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       localTracks.audio?.close()
@@ -119,13 +119,39 @@ export default function MeetingRoomPage() {
     setRemoteUsers([])
   }
 
-  // ── End meeting (educator) ────────────────────────────────
+  // ── End meeting ───────────────────────────────────────────
   const endMeetingMutation = useMutation({
     mutationFn: () => endMeeting(meetingId),
     onSuccess: async () => {
       await leaveVideo()
       navigate(-1)
     },
+  })
+
+  // ── Recording ─────────────────────────────────────────────
+  const [isRecording, setIsRecording] = useState(false)
+  const [recordingUrl, setRecordingUrl] = useState(meeting?.recording_url || null)
+  const [recordingMsg, setRecordingMsg] = useState('')
+
+  const startRecMutation = useMutation({
+    mutationFn: () => startRecording(meetingId),
+    onSuccess: () => {
+      setIsRecording(true)
+      setRecordingMsg('Recording started')
+      setTimeout(() => setRecordingMsg(''), 3000)
+    },
+    onError: (err) => setRecordingMsg(err.response?.data?.detail || 'Failed to start recording'),
+  })
+
+  const stopRecMutation = useMutation({
+    mutationFn: () => stopRecording(meetingId),
+    onSuccess: (res) => {
+      setIsRecording(false)
+      setRecordingUrl(res.data.recording_url)
+      setRecordingMsg('Recording saved!')
+      setTimeout(() => setRecordingMsg(''), 4000)
+    },
+    onError: (err) => setRecordingMsg(err.response?.data?.detail || 'Failed to stop recording'),
   })
 
   // ── WebSocket chat ────────────────────────────────────────
@@ -138,12 +164,9 @@ export default function MeetingRoomPage() {
 
   useEffect(() => {
     if (!meeting || meeting.status === 'ended' || !jwt) return
-
     const ws = new WebSocket(`ws://localhost:8000/ws/meetings/${meetingId}?token=${jwt}`)
     wsRef.current = ws
-
     ws.onopen = () => setWsConnected(true)
-
     ws.onmessage = (e) => {
       const data = JSON.parse(e.data)
       if (data.type === 'history') {
@@ -155,14 +178,11 @@ export default function MeetingRoomPage() {
         setOnlineUsers(data.online_users || [])
       }
     }
-
     ws.onclose = () => setWsConnected(false)
     ws.onerror = () => setWsConnected(false)
-
     return () => ws.close()
   }, [meeting?.status, meetingId, jwt])
 
-  // Auto-scroll chat
   useEffect(() => {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
@@ -177,40 +197,43 @@ export default function MeetingRoomPage() {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() }
   }
 
-  // ── Loading / scheduled states ────────────────────────────
-  if (isLoading) return <div style={styles.fullCenter}><div style={styles.loadingText}>Loading meeting...</div></div>
+  // ── States: loading / scheduled / ended ──────────────────
+  if (isLoading) return (
+    <div style={styles.fullCenter}>
+      <div style={styles.loadingText}>Loading meeting...</div>
+    </div>
+  )
 
-  if (meeting?.status === 'ended') {
-    return (
-      <div style={styles.fullCenter}>
-        <div style={styles.endedCard}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🏁</div>
-          <h2 style={styles.endedTitle}>Meeting Ended</h2>
-          <p style={styles.endedSub}>{meeting.title}</p>
-          <button style={styles.btnPrimary} onClick={() => navigate(-1)}>← Go Back</button>
-        </div>
+  if (meeting?.status === 'ended') return (
+    <div style={styles.fullCenter}>
+      <div style={styles.endedCard}>
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>🏁</div>
+        <h2 style={styles.endedTitle}>Meeting Ended</h2>
+        <p style={styles.endedSub}>{meeting.title}</p>
+        {meeting.recording_url && (
+          <a href={meeting.recording_url} target="_blank" rel="noreferrer" style={styles.recordingLink}>
+            🎬 View Recording
+          </a>
+        )}
+        <button style={styles.btnPrimary} onClick={() => navigate(-1)}>← Go Back</button>
       </div>
-    )
-  }
+    </div>
+  )
 
-  if (meeting?.status === 'scheduled') {
-    return (
-      <div style={styles.fullCenter}>
-        <div style={styles.waitCard}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
-          <h2 style={styles.waitTitle}>{meeting.title}</h2>
-          <p style={styles.waitSub}>Meeting starts in</p>
-          <div style={styles.countdown}>{countdown}</div>
-          <p style={styles.waitTime}>
-            {new Date(meeting.scheduled_at).toLocaleString()}
-          </p>
-          <button style={styles.btnSecondary} onClick={() => navigate(-1)}>← Back to Class</button>
-        </div>
+  if (meeting?.status === 'scheduled') return (
+    <div style={styles.fullCenter}>
+      <div style={styles.waitCard}>
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>⏳</div>
+        <h2 style={styles.waitTitle}>{meeting.title}</h2>
+        <p style={styles.waitSub}>Meeting starts in</p>
+        <div style={styles.countdown}>{countdown}</div>
+        <p style={styles.waitTime}>{new Date(meeting.scheduled_at).toLocaleString()}</p>
+        <button style={styles.btnSecondary} onClick={() => navigate(-1)}>← Back to Class</button>
       </div>
-    )
-  }
+    </div>
+  )
 
-  // ── Live meeting room ─────────────────────────────────────
+  // ── Live room ─────────────────────────────────────────────
   const allParticipants = remoteUsers.length + (joined ? 1 : 0)
 
   return (
@@ -224,14 +247,46 @@ export default function MeetingRoomPage() {
           <span style={styles.meetingTitle}>{meeting?.title}</span>
         </div>
         <div style={styles.topRight}>
+          {/* Recording indicator */}
+          {isRecording && (
+            <div style={styles.recIndicator}>
+              <div style={styles.recDot} />
+              <span style={styles.recLabel}>REC</span>
+            </div>
+          )}
+          {recordingMsg && <span style={styles.recMsg}>{recordingMsg}</span>}
+          {recordingUrl && !isRecording && (
+            <a href={recordingUrl} target="_blank" rel="noreferrer" style={styles.recLink}>
+              🎬 Recording
+            </a>
+          )}
           <span style={styles.participantCount}>👥 {allParticipants}</span>
           {isEducator && (
-            <button
-              style={styles.endBtn}
-              onClick={() => { if (confirm('End meeting for everyone?')) endMeetingMutation.mutate() }}
-            >
-              End Meeting
-            </button>
+            <>
+              {!isRecording ? (
+                <button
+                  style={styles.recBtn}
+                  onClick={() => startRecMutation.mutate()}
+                  disabled={startRecMutation.isPending}
+                >
+                  ⏺ Record
+                </button>
+              ) : (
+                <button
+                  style={styles.recStopBtn}
+                  onClick={() => stopRecMutation.mutate()}
+                  disabled={stopRecMutation.isPending}
+                >
+                  ⏹ Stop Rec
+                </button>
+              )}
+              <button
+                style={styles.endBtn}
+                onClick={() => { if (confirm('End meeting for everyone?')) endMeetingMutation.mutate() }}
+              >
+                End Meeting
+              </button>
+            </>
           )}
           {!isEducator && (
             <button style={styles.leaveBtn} onClick={() => { leaveVideo(); navigate(-1) }}>
@@ -242,13 +297,9 @@ export default function MeetingRoomPage() {
       </div>
 
       <div style={styles.body}>
-
         {/* Video area */}
         <div style={styles.videoSection}>
-          {agoraError && (
-            <div style={styles.agoraError}>⚠️ {agoraError}</div>
-          )}
-
+          {agoraError && <div style={styles.agoraError}>⚠️ {agoraError}</div>}
           {!joined && !agoraError && (
             <div style={styles.joiningOverlay}>
               <div style={styles.spinner} />
@@ -258,32 +309,25 @@ export default function MeetingRoomPage() {
             </div>
           )}
 
-          {/* Video grid */}
           <div style={{
             ...styles.videoGrid,
             gridTemplateColumns: remoteUsers.length === 0
               ? '1fr'
-              : remoteUsers.length <= 1
-              ? '1fr 1fr'
+              : remoteUsers.length <= 1 ? '1fr 1fr'
               : 'repeat(3, 1fr)',
           }}>
-            {/* Local video */}
             <div style={styles.videoTile}>
               <div ref={localVideoRef} style={styles.videoEl} />
               {!camOn && <div style={styles.camOffOverlay}>📷 Camera off</div>}
               <div style={styles.videoLabel}>
                 <span>{user?.name} (You)</span>
-                {!micOn && <span style={styles.mutedIcon}>🔇</span>}
+                {!micOn && <span>🔇</span>}
               </div>
             </div>
-
-            {/* Remote videos */}
             {remoteUsers.map((u) => (
               <div key={u.uid} style={styles.videoTile}>
                 <div id={`remote-${u.uid}`} style={styles.videoEl} />
-                <div style={styles.videoLabel}>
-                  <span>Participant {u.uid}</span>
-                </div>
+                <div style={styles.videoLabel}><span>Participant {u.uid}</span></div>
               </div>
             ))}
           </div>
@@ -307,9 +351,8 @@ export default function MeetingRoomPage() {
           </div>
         </div>
 
-        {/* Chat sidebar */}
+        {/* Chat */}
         <div style={styles.chatSection}>
-          {/* Online users */}
           <div style={styles.onlineBar}>
             <span style={styles.onlineTitle}>Online ({onlineUsers.length})</span>
             <div style={styles.onlineAvatars}>
@@ -324,7 +367,6 @@ export default function MeetingRoomPage() {
             </div>
           </div>
 
-          {/* Messages */}
           <div style={styles.messages}>
             {messages.length === 0 && (
               <div style={styles.noMessages}>No messages yet. Say hi! 👋</div>
@@ -347,7 +389,6 @@ export default function MeetingRoomPage() {
             <div ref={chatBottomRef} />
           </div>
 
-          {/* Input */}
           <div style={styles.chatInputRow}>
             <div style={{ ...styles.wsIndicator, background: wsConnected ? '#4ade80' : '#ff8080' }} />
             <input
@@ -369,25 +410,29 @@ export default function MeetingRoomPage() {
 
 const styles = {
   room: { display: 'flex', flexDirection: 'column', height: '100vh', background: '#0a0a14', color: '#fff', fontFamily: "'Arial', sans-serif" },
-  topBar: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0 },
+  topBar: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', background: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.08)', flexShrink: 0, flexWrap: 'wrap', gap: '10px' },
   topLeft: { display: 'flex', alignItems: 'center', gap: '12px' },
   liveDot: { width: '10px', height: '10px', borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px #4ade80', animation: 'pulse 1.5s infinite' },
   liveLabel: { fontSize: '11px', fontWeight: '800', color: '#4ade80', letterSpacing: '1px' },
   meetingTitle: { fontSize: '15px', fontWeight: '600', color: '#fff' },
-  topRight: { display: 'flex', alignItems: 'center', gap: '12px' },
+  topRight: { display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' },
   participantCount: { fontSize: '13px', color: 'rgba(255,255,255,0.5)' },
+  recIndicator: { display: 'flex', alignItems: 'center', gap: '5px', background: 'rgba(255,80,80,0.15)', border: '1px solid rgba(255,80,80,0.3)', borderRadius: '20px', padding: '4px 10px' },
+  recDot: { width: '8px', height: '8px', borderRadius: '50%', background: '#ff5050', animation: 'pulse 1s infinite' },
+  recLabel: { fontSize: '11px', fontWeight: '800', color: '#ff8080', letterSpacing: '1px' },
+  recMsg: { fontSize: '12px', color: '#4ade80' },
+  recLink: { fontSize: '12px', color: '#a78bfa', textDecoration: 'none', background: 'rgba(167,139,250,0.1)', padding: '4px 10px', borderRadius: '6px', border: '1px solid rgba(167,139,250,0.2)' },
+  recBtn: { background: 'rgba(255,80,80,0.15)', border: '1px solid rgba(255,80,80,0.3)', color: '#ff8080', borderRadius: '8px', padding: '7px 14px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Arial', sans-serif" },
+  recStopBtn: { background: 'rgba(255,80,80,0.3)', border: '1px solid rgba(255,80,80,0.5)', color: '#fff', borderRadius: '8px', padding: '7px 14px', fontSize: '12px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Arial', sans-serif" },
   endBtn: { background: 'rgba(255,80,80,0.2)', border: '1px solid rgba(255,80,80,0.4)', color: '#ff8080', borderRadius: '8px', padding: '7px 16px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Arial', sans-serif" },
   leaveBtn: { background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: '#fff', borderRadius: '8px', padding: '7px 16px', fontSize: '13px', cursor: 'pointer', fontFamily: "'Arial', sans-serif" },
   body: { display: 'flex', flex: 1, overflow: 'hidden' },
-
-  // Video
   videoSection: { flex: 1, display: 'flex', flexDirection: 'column', position: 'relative', background: '#0d0d1a' },
   videoGrid: { flex: 1, display: 'grid', gap: '8px', padding: '16px', overflow: 'hidden' },
   videoTile: { position: 'relative', background: '#1a1a2e', borderRadius: '12px', overflow: 'hidden', minHeight: '200px' },
   videoEl: { width: '100%', height: '100%', objectFit: 'cover' },
   camOffOverlay: { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#1a1a2e', color: 'rgba(255,255,255,0.4)', fontSize: '14px' },
   videoLabel: { position: 'absolute', bottom: '8px', left: '10px', display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.6)', borderRadius: '6px', padding: '3px 8px', fontSize: '12px', color: '#fff' },
-  mutedIcon: { fontSize: '12px' },
   controls: { display: 'flex', justifyContent: 'center', gap: '16px', padding: '16px', borderTop: '1px solid rgba(255,255,255,0.06)', flexShrink: 0 },
   controlBtn: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '12px', padding: '12px 20px', cursor: 'pointer', color: '#fff', fontSize: '20px', minWidth: '70px', fontFamily: "'Arial', sans-serif" },
   controlBtnOff: { background: 'rgba(255,80,80,0.2)' },
@@ -395,8 +440,6 @@ const styles = {
   joiningOverlay: { position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0d0d1a', zIndex: 10 },
   spinner: { width: '40px', height: '40px', border: '3px solid rgba(255,255,255,0.1)', borderTop: '3px solid #667eea', borderRadius: '50%', animation: 'spin 0.8s linear infinite' },
   agoraError: { position: 'absolute', top: '16px', left: '50%', transform: 'translateX(-50%)', background: 'rgba(255,80,80,0.2)', border: '1px solid rgba(255,80,80,0.4)', color: '#ff8080', borderRadius: '10px', padding: '10px 20px', fontSize: '13px', zIndex: 20 },
-
-  // Chat
   chatSection: { width: '320px', display: 'flex', flexDirection: 'column', borderLeft: '1px solid rgba(255,255,255,0.08)', background: 'rgba(255,255,255,0.02)', flexShrink: 0 },
   onlineBar: { padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', gap: '10px' },
   onlineTitle: { fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' },
@@ -417,18 +460,17 @@ const styles = {
   wsIndicator: { width: '6px', height: '6px', borderRadius: '50%', flexShrink: 0 },
   chatInput: { flex: 1, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '10px 12px', color: '#fff', fontSize: '13px', outline: 'none', fontFamily: "'Arial', sans-serif" },
   sendBtn: { background: 'linear-gradient(135deg, #667eea, #764ba2)', border: 'none', borderRadius: '10px', padding: '10px 14px', color: '#fff', cursor: 'pointer', fontSize: '14px', fontFamily: "'Arial', sans-serif" },
-
-  // Waiting / ended screens
   fullCenter: { minHeight: '100vh', background: '#0a0a14', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Arial', sans-serif" },
-  waitCard: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '48px 40px', textAlign: 'center', maxWidth: '420px', width: '100%' },
-  waitTitle: { color: '#fff', fontSize: '22px', fontWeight: '700', margin: '0 0 8px 0' },
-  waitSub: { color: 'rgba(255,255,255,0.4)', fontSize: '14px', margin: '0 0 16px 0' },
-  countdown: { fontSize: '48px', fontWeight: '800', color: '#a78bfa', margin: '16px 0', letterSpacing: '-1px' },
-  waitTime: { color: 'rgba(255,255,255,0.3)', fontSize: '13px', marginBottom: '32px' },
-  endedCard: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '48px 40px', textAlign: 'center', maxWidth: '360px' },
-  endedTitle: { color: '#fff', fontSize: '22px', fontWeight: '700', margin: '0 0 8px 0' },
-  endedSub: { color: 'rgba(255,255,255,0.4)', fontSize: '14px', margin: '0 0 28px 0' },
-  loadingText: { color: 'rgba(255,255,255,0.4)', fontSize: '16px', fontFamily: "'Arial', sans-serif" },
+  waitCard: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '48px 40px', textAlign: 'center', maxWidth: '420px', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' },
+  waitTitle: { color: '#fff', fontSize: '22px', fontWeight: '700', margin: 0 },
+  waitSub: { color: 'rgba(255,255,255,0.4)', fontSize: '14px', margin: 0 },
+  countdown: { fontSize: '48px', fontWeight: '800', color: '#a78bfa', margin: '8px 0', letterSpacing: '-1px' },
+  waitTime: { color: 'rgba(255,255,255,0.3)', fontSize: '13px', marginBottom: '24px' },
+  endedCard: { background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '20px', padding: '48px 40px', textAlign: 'center', maxWidth: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' },
+  endedTitle: { color: '#fff', fontSize: '22px', fontWeight: '700', margin: 0 },
+  endedSub: { color: 'rgba(255,255,255,0.4)', fontSize: '14px', margin: 0 },
+  recordingLink: { background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.3)', color: '#a78bfa', borderRadius: '10px', padding: '10px 20px', fontSize: '14px', textDecoration: 'none', fontWeight: '600' },
+  loadingText: { color: 'rgba(255,255,255,0.4)', fontSize: '16px' },
   btnPrimary: { background: 'linear-gradient(135deg, #667eea, #764ba2)', color: '#fff', border: 'none', borderRadius: '10px', padding: '12px 24px', fontSize: '14px', fontWeight: '600', cursor: 'pointer', fontFamily: "'Arial', sans-serif" },
   btnSecondary: { background: 'rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.7)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '10px', padding: '12px 24px', fontSize: '14px', cursor: 'pointer', fontFamily: "'Arial', sans-serif" },
 }

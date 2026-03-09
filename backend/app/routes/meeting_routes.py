@@ -133,3 +133,23 @@ async def agora_token(
     current_user: User = Depends(get_current_user),
 ):
     return await get_agora_token(meeting_id, current_user)
+
+
+# ── Recording ─────────────────────────────────────────────────
+from app.services.agora_service import start_recording, stop_recording
+
+
+@router.post("/meetings/{meeting_id}/recording/start")
+async def recording_start(
+    meeting_id: str,
+    educator: User = Depends(require_educator),
+):
+    return await start_recording(meeting_id, educator)
+
+
+@router.post("/meetings/{meeting_id}/recording/stop")
+async def recording_stop(
+    meeting_id: str,
+    educator: User = Depends(require_educator),
+):
+    return await stop_recording(meeting_id, educator)

@@ -6,3 +6,6 @@ export const getMeeting      = (meetingId)      => api.get(`/meetings/${meetingI
 export const endMeeting      = (meetingId)      => api.patch(`/meetings/${meetingId}/end`)
 export const getAgoraToken   = (meetingId)      => api.get(`/meetings/${meetingId}/agora-token`)
 export const inviteAllToMeeting = (meetingId)   => api.post(`/meetings/${meetingId}/invite-all`)
+
+export const startRecording = (meetingId) => api.post(`/meetings/${meetingId}/recording/start`)
+export const stopRecording  = (meetingId) => api.post(`/meetings/${meetingId}/recording/stop`)

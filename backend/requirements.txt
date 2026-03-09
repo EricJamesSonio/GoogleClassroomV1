@@ -10,3 +10,4 @@ cloudinary
 python-dotenv
 apscheduler
 agora-token-builder
+httpx
