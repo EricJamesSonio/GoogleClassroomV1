@@ -7,7 +7,8 @@ from app.models.meeting_invitation import MeetingInvitation
 from app.models.user import User
 
 try:
-    from agora_token_builder import RtcTokenBuilder, Role_Publisher
+    from agora_token_builder import RtcTokenBuilder
+    Role_Publisher = 1  # agora-token-builder v1.0.0 uses integer roles
     AGORA_AVAILABLE = True
 except ImportError:
     AGORA_AVAILABLE = False

@@ -45,6 +45,7 @@ export default function MeetingRoomPage() {
   const joinVideo = useCallback(async () => {
     try {
       const res = await getAgoraToken(meetingId)
+      console.log('🔑 Agora token response:', res.data)
       const { token, channel, app_id, uid } = res.data
 
       client.on('user-published', async (remoteUser, mediaType) => {

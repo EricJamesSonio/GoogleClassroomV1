@@ -3,7 +3,14 @@ from app.schemas.meeting_schema import CreateMeetingRequest, MeetingResponse
 from app.services.meeting_service import create_meeting, get_class_meetings, get_meeting, end_meeting
 from app.core.dependencies import get_current_user, require_educator
 from app.models.user import User
+from app.core.config import settings
 from typing import List
+
+try:
+    import agora_token_builder
+    AGORA_AVAILABLE = True
+except ImportError:
+    AGORA_AVAILABLE = False
 
 router = APIRouter(tags=["Meetings"])
 
@@ -133,3 +140,13 @@ async def agora_token(
     current_user: User = Depends(get_current_user),
 ):
     return await get_agora_token(meeting_id, current_user)
+
+
+# ── Debug endpoint ─────────────────────────────────────────────
+@router.get("/debug/agora-config")
+async def debug_agora_config():
+    return {
+        "AGORA_APP_ID": settings.AGORA_APP_ID or "❌ EMPTY",
+        "AGORA_APP_CERT": "✅ SET" if settings.AGORA_APP_CERT else "❌ EMPTY",
+        "AGORA_AVAILABLE": AGORA_AVAILABLE,
+    }
