@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 10080
 
-    AGORA_APP_ID: str = ""
+    AGORA_APP_ID: str = "" 
     AGORA_APP_CERT: str = ""
 
     CLOUDINARY_CLOUD_NAME: str = ""

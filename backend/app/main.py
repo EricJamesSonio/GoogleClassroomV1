@@ -25,6 +25,7 @@ allowed_origins = [
     "http://localhost:5173",
     "http://localhost:4173",
     "https://googleclassroomv1.onrender.com",  # production frontend
+    
 ]
 
 # Also allow any extra URL set via env
