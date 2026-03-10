@@ -1,8 +1,8 @@
-# ClassRoom App 🎓
+# ClassRoom App 
 
 A modern, responsive **Google Classroom-style platform** built with **React + FastAPI**. Educators and students can create classes, schedule meetings, and collaborate in real-time with **live video, instant chat, and responsive design**.
 
-**🚀 Live Demo:** [ClassRoom on Render](#)
+** Live Demo:** [ClassRoom on Render](#)
 
 ---
 
