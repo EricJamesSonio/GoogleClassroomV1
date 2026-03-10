@@ -160,7 +160,18 @@ function ErrBox({ msg }) {
 
 const ms = {
   overlay: { position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', backdropFilter:'blur(8px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:100, padding:'24px' },
-  modal: { background:'var(--bg3)', border:'1px solid var(--border2)', borderRadius:'var(--r-lg)', padding:'0', width:'100%', maxWidth:'440px', boxShadow:'var(--shadow-xl)', overflow:'hidden' },
+    modal: { 
+    background:'var(--bg3)', 
+    border:'1px solid var(--border2)', 
+    borderRadius:'var(--r-lg)', 
+    padding:'0', 
+    width:'100%', 
+    maxWidth:'440px',
+    maxHeight:'90vh',
+    overflowY:'auto', 
+    boxShadow:'var(--shadow-xl)', 
+    overflow:'hidden' 
+  },
   head: { display:'flex', justifyContent:'space-between', alignItems:'flex-start', padding:'28px 28px 0', marginBottom:'24px' },
   title: { fontFamily:'var(--font-head)', color:'var(--text)', fontSize:'20px', fontWeight:'800', letterSpacing:'-0.3px', marginBottom:'4px' },
   sub: { color:'var(--text3)', fontSize:'13px' },
@@ -173,12 +184,45 @@ const ms = {
 
 const s = {
   header: { display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'32px', gap:'16px', flexWrap:'wrap' },
-  heading: { fontFamily:'var(--font-head)', fontSize:'30px', fontWeight:'900', color:'var(--text)', letterSpacing:'-0.6px', marginBottom:'4px' },
+    heading: { 
+    fontFamily:'var(--font-head)', 
+    fontSize:'clamp(26px, 7vw, 30px)', 
+    fontWeight:'900', 
+    color:'var(--text)', 
+    letterSpacing:'-0.6px', 
+    marginBottom:'4px' 
+  },
   sub: { color:'var(--text3)', fontSize:'14px' },
   headerActions: { display:'flex', gap:'10px' },
-  btnPrimary: { background:'linear-gradient(135deg,#818cf8,#6366f1)', color:'#fff', border:'none', borderRadius:'var(--r)', padding:'10px 18px', fontSize:'14px', fontWeight:'600', boxShadow:'0 4px 16px rgba(129,140,248,0.25)', transition:'all 0.2s', fontFamily:'var(--font-body)' },
+    btnPrimary: { 
+    background:'linear-gradient(135deg,#818cf8,#6366f1)', 
+    color:'#fff', 
+    border:'none', 
+    borderRadius:'var(--r)', 
+    padding:'clamp(10px, 2vw, 12px) clamp(16px, 3vw, 18px)', 
+    fontSize:'clamp(12px, 2vw, 14px)', 
+    fontWeight:'600', 
+    boxShadow:'0 4px 16px rgba(129,140,248,0.25)', 
+    transition:'all 0.2s', 
+    fontFamily:'var(--font-body)', 
+    minHeight:'44px',
+    minWidth:'44px', 
+    cursor:'pointer' 
+  },
+  
   btnOutline: { background:'transparent', color:'var(--text2)', border:'1px solid var(--border2)', borderRadius:'var(--r)', padding:'10px 16px', fontSize:'14px', fontFamily:'var(--font-body)', transition:'all 0.2s' },
-  input: { background:'rgba(255,255,255,0.04)', border:'1px solid var(--border2)', borderRadius:'var(--r)', padding:'12px 14px', color:'var(--text)', fontSize:'14px', width:'100%', fontFamily:'var(--font-body)', transition:'all 0.2s' },
+    input: { 
+    background:'rgba(255,255,255,0.04)', 
+    border:'1px solid var(--border2)', 
+    borderRadius:'var(--r)', 
+    padding:'clamp(10px, 2vw, 12px) 14px', 
+    color:'var(--text)', 
+    fontSize:'14px', 
+    width:'100%', 
+    fontFamily:'var(--font-body)', 
+    transition:'all 0.2s',
+    minHeight:'44px'
+  },
 
   skeletonGrid: { display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:'14px' },
   skeletonCard: { height:'200px' },
@@ -188,7 +232,11 @@ const s = {
   emptyTitle: { fontFamily:'var(--font-head)', color:'var(--text)', fontSize:'20px', fontWeight:'800' },
   emptyDesc: { color:'var(--text3)', fontSize:'14px', maxWidth:'340px', lineHeight:'1.65', marginBottom:'8px' },
 
-  grid: { display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))', gap:'14px' },
+    grid: { 
+    display:'grid', 
+    gridTemplateColumns:'repeat(auto-fill, minmax(clamp(250px, 80vw, 280px), 1fr))', 
+    gap:'14px' 
+  },
   card: { background:'var(--bg3)', border:'1px solid var(--border)', borderRadius:'var(--r-md)', overflow:'hidden', cursor:'pointer', transition:'transform 0.2s, box-shadow 0.2s, border-color 0.2s' },
   cardStripe: { height:'6px', position:'relative' },
   cardStripeGlow: { position:'absolute', inset:0, opacity:0.4 },

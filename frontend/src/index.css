@@ -139,3 +139,467 @@ body::before {
   animation: shimmer 1.4s ease infinite;
   border-radius: var(--r);
 }
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* LAYOUT RESPONSIVE STYLES - ADD TO YOUR GLOBAL CSS FILE             */
+/* ════════════════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* DESKTOP (1025px+) - DEFAULT LAYOUT                                  */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1025px) {
+  /* Sidebar always visible on desktop */
+  [data-sidebar] {
+    position: fixed;
+    transform: translateX(0) !important;
+    width: 240px;
+    min-height: 100vh;
+  }
+
+  /* Hide mobile header on desktop */
+  [data-mobile-header] {
+    display: none !important;
+  }
+
+  /* Hide overlay on desktop */
+  [data-overlay] {
+    display: none !important;
+  }
+
+  /* Main content has left margin for sidebar */
+  [data-main] {
+    margin-left: 240px;
+  }
+
+  /* Full padding on desktop */
+  [data-main-inner] {
+    padding: 44px 44px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* TABLET (769px - 1024px) - COLLAPSIBLE SIDEBAR                       */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  /* Sidebar slides in from left on tablet */
+  [data-sidebar] {
+    position: fixed;
+    width: 100%;
+    max-width: 70vw;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: var(--shadow-xl);
+    z-index: 20;
+    top: 0;
+    left: 0;
+    bottom: 0;
+  }
+
+  /* Sidebar visible when open */
+  [data-sidebar].open {
+    transform: translateX(0);
+  }
+
+  /* Show overlay when sidebar open */
+  [data-overlay] {
+    display: none;
+  }
+
+  [data-overlay].show {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 15;
+    animation: fadeIn 0.2s ease;
+  }
+
+  /* Main content takes full width */
+  [data-main] {
+    margin-left: 0;
+  }
+
+  /* Reduce padding on tablet */
+  [data-main-inner] {
+    padding: 32px 28px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* MOBILE (577px - 768px) - HAMBURGER MENU                             */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* Show mobile header */
+  [data-mobile-header] {
+    display: flex !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    z-index: 30;
+  }
+
+  /* Sidebar slides in from left */
+  [data-sidebar] {
+    max-width: 70vw;
+    transform: translateX(-100%);
+  }
+
+  [data-sidebar].open {
+    transform: translateX(0);
+  }
+
+  /* Show/hide overlay */
+  [data-overlay] {
+    display: none;
+  }
+
+  [data-overlay].show {
+    display: block;
+  }
+
+  /* Main content pushed down by fixed header */
+  [data-main] {
+    margin-left: 0;
+    padding-top: 56px;
+  }
+
+  /* Padding for mobile */
+  [data-main-inner] {
+    padding: 24px 20px;
+  }
+
+  /* Smaller fonts on mobile */
+  h1 {
+    font-size: clamp(22px, 6vw, 28px);
+  }
+
+  h2 {
+    font-size: clamp(18px, 5vw, 24px);
+  }
+
+  h3 {
+    font-size: clamp(16px, 4vw, 20px);
+  }
+
+  /* Better mobile button sizes */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* SMALL MOBILE (≤ 576px) - COMPACT LAYOUT                             */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 576px) {
+  /* Show mobile header */
+  [data-mobile-header] {
+    display: flex !important;
+    height: 52px;
+  }
+
+  /* Narrower sidebar on small screens */
+  [data-sidebar] {
+    max-width: 80vw;
+    padding: 12px 8px;
+  }
+
+  [data-sidebar] [data-nav-item] {
+    padding: 8px 10px;
+    font-size: 13px;
+    gap: 8px;
+  }
+
+  /* Very compact padding on small screens */
+  [data-main-inner] {
+    padding: 16px 12px;
+  }
+
+  /* Responsive typography */
+  h1 {
+    font-size: clamp(20px, 5vw, 26px);
+  }
+
+  h2 {
+    font-size: clamp(16px, 4vw, 22px);
+  }
+
+  h3 {
+    font-size: clamp(14px, 3vw, 18px);
+  }
+
+  p {
+    font-size: clamp(13px, 2vw, 15px);
+  }
+
+  /* Compact brand section */
+  [data-brand] {
+    gap: 6px;
+  }
+
+  [data-brand-mark] {
+    width: 28px;
+    height: 28px;
+  }
+
+  [data-brand-name] {
+    font-size: 14px;
+  }
+
+  /* Compact role badge */
+  [data-role-badge] {
+    padding: 4px 8px;
+    font-size: 9px;
+  }
+
+  /* Compact avatar */
+  [data-avatar] {
+    width: 28px;
+    height: 28px;
+    font-size: 11px;
+  }
+
+  /* Compact user info */
+  [data-user-name] {
+    font-size: 12px;
+  }
+
+  [data-user-meta] {
+    font-size: 10px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* LANDSCAPE ORIENTATION (Mobile landscape)                            */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media (max-height: 500px) and (orientation: landscape) {
+  /* Compact header in landscape */
+  [data-mobile-header] {
+    height: 48px;
+    padding: 8px;
+  }
+
+  /* Tight sidebar padding */
+  [data-sidebar] {
+    padding: 8px 6px;
+  }
+
+  /* Smaller fonts in landscape */
+  body {
+    font-size: 13px;
+  }
+
+  h1 {
+    font-size: clamp(16px, 3vh, 20px);
+  }
+
+  h2 {
+    font-size: clamp(14px, 2.5vh, 18px);
+  }
+
+  /* Less vertical space for nav items */
+  [data-nav-item] {
+    padding: 6px 10px;
+    min-height: 40px;
+  }
+
+  /* Compact user section */
+  [data-user-row] {
+    padding: 4px 6px;
+  }
+
+  [data-avatar] {
+    width: 26px;
+    height: 26px;
+    font-size: 10px;
+  }
+
+  /* Less footer padding */
+  [data-footer] {
+    padding-top: 8px;
+    gap: 6px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* TOUCH DEVICES - IMPROVE INTERACTION TARGETS                         */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media (hover: none) and (pointer: coarse) {
+  /* Larger buttons on touch devices */
+  button, a, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    padding: clamp(8px, 2vw, 12px);
+  }
+
+  /* Visual feedback on tap */
+  button:active {
+    opacity: 0.7;
+  }
+
+  /* Larger touch targets for sidebar */
+  [data-sidebar] [data-nav-item] {
+    min-height: 48px;
+    padding: 10px 14px;
+  }
+
+  /* Bigger hamburger on touch */
+  [data-hamburger] {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* REDUCE MOTION - RESPECT USER PREFERENCES                            */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  /* Remove sidebar animation */
+  [data-sidebar] {
+    transition: none !important;
+  }
+
+  /* Remove all animations */
+  * {
+    animation: none !important;
+  }
+
+  /* Remove transitions */
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* DARK MODE - OPTIONAL (if you want explicit dark mode)              */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-color-scheme: dark) {
+  /* Already using CSS variables, so this adapts automatically */
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* KEYFRAME ANIMATIONS                                                 */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* PRINT STYLES - OPTIONAL                                             */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media print {
+  /* Hide sidebar when printing */
+  [data-sidebar] {
+    display: none;
+  }
+
+  /* Full width on print */
+  [data-main] {
+    margin-left: 0;
+  }
+
+  /* Hide mobile header when printing */
+  [data-mobile-header] {
+    display: none !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* SCROLLBAR STYLING                                                   */
+/* ════════════════════════════════════════════════════════════════════ */
+
+[data-sidebar] {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+[data-sidebar]::-webkit-scrollbar {
+  width: 4px;
+}
+
+[data-sidebar]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-sidebar]::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+
+[data-sidebar]::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* ACCESSIBILITY - HIGH CONTRAST MODE                                 */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-contrast: more) {
+  [data-sidebar] {
+    border-right-width: 2px;
+  }
+
+  [data-mobile-header] {
+    border-bottom-width: 2px;
+  }
+
+  [data-nav-item] {
+    border: 1px solid transparent;
+  }
+
+  [data-nav-item]:focus-visible {
+    outline: 2px solid var(--stu);
+    outline-offset: -2px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* FOCUS STATES - KEYBOARD NAVIGATION                                  */
+/* ════════════════════════════════════════════════════════════════════ */
+
+[data-nav-item]:focus-visible,
+[data-hamburger]:focus-visible,
+[data-logout-btn]:focus-visible {
+  outline: 2px solid var(--stu);
+  outline-offset: 2px;
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* SMOOTH SCROLLING                                                     */
+/* ════════════════════════════════════════════════════════════════════ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+[data-sidebar] {
+  -webkit-overflow-scrolling: touch;
+}
