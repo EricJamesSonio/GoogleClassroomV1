@@ -20,16 +20,16 @@ ClassRoom is a full-stack learning platform that demonstrates modern web develop
 
 ## Key Features
 
-✅ **User Authentication** – Sign up as educator or student  
-✅ **Class Management** – Create, join, and manage classes  
-✅ **Meeting Invitations** – Students accept/decline meeting requests  
-✅ **Scheduled Meetings** – Countdown timer + automatic start  
-✅ **Live Video Calls** – HD video conferencing with Agora  
-✅ **Real-time Chat** – Message classmates during meetings  
-✅ **Responsive Layout** – Mobile hamburger menu, desktop sidebar  
-✅ **Adaptive Video Grid** – Google Meet-style layout for any participant count  
-✅ **Meeting Recording** – Optional cloud recording via Agora  
-✅ **File Storage** – Media uploads via Cloudinary  
+ **User Authentication** – Sign up as educator or student  
+ **Class Management** – Create, join, and manage classes  
+ **Meeting Invitations** – Students accept/decline meeting requests  
+ **Scheduled Meetings** – Countdown timer + automatic start  
+ **Live Video Calls** – HD video conferencing with Agora  
+ **Real-time Chat** – Message classmates during meetings  
+ **Responsive Layout** – Mobile hamburger menu, desktop sidebar  
+ **Adaptive Video Grid** – Google Meet-style layout for any participant count  
+ **Meeting Recording** – Optional cloud recording via Agora  
+ **File Storage** – Media uploads via Cloudinary  
 
 ---
 
@@ -146,13 +146,13 @@ ClassRoom/
 
 This project teaches:
 
-- 🔐 **Authentication** – JWT tokens and role-based access
-- 🌐 **Real-time Systems** – WebSockets for live chat
-- 📹 **Video Integration** – Agora SDK setup and usage
-- ⚡ **Async Backend** – FastAPI with MongoDB
-- 📱 **Responsive Design** – Mobile-first CSS with media queries
-- 🎯 **State Management** – Zustand + TanStack Query
-- ☁️ **Cloud Services** – External APIs (Agora, Cloudinary, MongoDB Atlas)
+-  **Authentication** – JWT tokens and role-based access
+-  **Real-time Systems** – WebSockets for live chat
+-  **Video Integration** – Agora SDK setup and usage
+-  **Async Backend** – FastAPI with MongoDB
+-  **Responsive Design** – Mobile-first CSS with media queries
+-  **State Management** – Zustand + TanStack Query
+-  **Cloud Services** – External APIs (Agora, Cloudinary, MongoDB Atlas)
 
 ---
 
