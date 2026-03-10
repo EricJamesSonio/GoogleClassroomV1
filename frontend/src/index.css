@@ -996,3 +996,305 @@ html {
 [data-meeting-messages]::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.15);
 }
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* GOOGLE MEET STYLE RESPONSIVE VIDEO GRID - ADD TO index.css          */
+/* ════════════════════════════════════════════════════════════════════ */
+
+/* VIDEO GRID OPTIMIZATION */
+[data-video-grid] {
+  display: grid;
+  gap: clamp(6px, 1.5vw, 12px);
+  padding: clamp(8px, 2vw, 16px);
+  overflow: auto;
+  justify-items: stretch;
+  align-items: stretch;
+}
+
+/* Video tiles maintain 16:9 aspect ratio */
+[data-video-tile] {
+  aspect-ratio: 16 / 9;
+  min-height: clamp(120px, 25vh, 400px);
+  position: relative;
+  border-radius: var(--r-md);
+  overflow: hidden;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+}
+
+[data-video-el] {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* MOBILE (max-width: 768px) - 1-2 column grid                         */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  [data-video-grid] {
+    gap: clamp(4px, 1vw, 6px);
+    padding: clamp(4px, 1vw, 8px);
+  }
+
+  [data-video-tile] {
+    min-height: clamp(100px, 20vh, 180px);
+    aspect-ratio: 16 / 9;
+  }
+
+  /* 1 participant = 1 full column */
+  [data-video-grid]:has([data-video-tile]:nth-child(1):not([data-video-tile]:nth-child(2))) {
+    grid-template-columns: 1fr;
+  }
+
+  /* 2+ participants = 2 columns */
+  [data-video-grid]:has([data-video-tile]:nth-child(2)) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  [data-video-label] {
+    font-size: clamp(8px, 1.5vw, 10px);
+    padding: clamp(2px, 0.5vw, 4px) clamp(4px, 1vw, 6px);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* TABLET (769px - 1024px) - 2-3 column grid                           */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  [data-video-grid] {
+    gap: clamp(6px, 1.5vw, 10px);
+    padding: clamp(8px, 1.5vw, 12px);
+  }
+
+  [data-video-tile] {
+    min-height: clamp(150px, 30vh, 300px);
+    aspect-ratio: 16 / 9;
+  }
+
+  /* 1 = 1 col */
+  [data-video-grid]:has([data-video-tile]:nth-child(1):not([data-video-tile]:nth-child(2))) {
+    grid-template-columns: 1fr;
+  }
+
+  /* 2 = 2 col */
+  [data-video-grid]:has([data-video-tile]:nth-child(2):not([data-video-tile]:nth-child(3))) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* 3-4 = 2 col */
+  [data-video-grid]:has([data-video-tile]:nth-child(3):not([data-video-tile]:nth-child(5))) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* 5-6 = 2-3 col (flexible) */
+  [data-video-grid]:has([data-video-tile]:nth-child(5)) {
+    grid-template-columns: repeat(auto-fit, minmax(clamp(150px, 45%, 300px), 1fr));
+  }
+
+  /* 7+ = 3 col */
+  [data-video-grid]:has([data-video-tile]:nth-child(7)) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* DESKTOP (1025px+) - 3-4 column grid (Google Meet style)             */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1025px) {
+  [data-video-grid] {
+    gap: clamp(6px, 1.2vw, 12px);
+    padding: clamp(12px, 1.5vw, 16px);
+  }
+
+  [data-video-tile] {
+    min-height: clamp(180px, 35vh, 450px);
+    aspect-ratio: 16 / 9;
+  }
+
+  /* 1 participant = centered, full width */
+  [data-video-grid]:has([data-video-tile]:nth-child(1):not([data-video-tile]:nth-child(2))) {
+    grid-template-columns: 1fr;
+    max-width: 800px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* 2 participants = 2 col */
+  [data-video-grid]:has([data-video-tile]:nth-child(2):not([data-video-tile]:nth-child(3))) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* 3 participants = 3 col */
+  [data-video-grid]:has([data-video-tile]:nth-child(3):not([data-video-tile]:nth-child(4))) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* 4 participants = 2x2 grid */
+  [data-video-grid]:has([data-video-tile]:nth-child(4):not([data-video-tile]:nth-child(5))) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* 5-6 participants = 3 col */
+  [data-video-grid]:has([data-video-tile]:nth-child(5)) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* 7-9 participants = 3x3 grid */
+  [data-video-grid]:has([data-video-tile]:nth-child(7)) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* 10-12 participants = 4 col */
+  [data-video-grid]:has([data-video-tile]:nth-child(10)) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  /* 13+ participants = 4 col */
+  [data-video-grid]:has([data-video-tile]:nth-child(13)) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* VIDEO LABELS & OVERLAYS                                             */
+/* ════════════════════════════════════════════════════════════════════ */
+
+[data-video-label] {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  border-radius: var(--r-sm);
+  padding: clamp(4px, 1vw, 5px) clamp(6px, 2vw, 10px);
+  font-size: clamp(10px, 2vw, 12px);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 5;
+  font-family: var(--font-body);
+}
+
+[data-cam-off] {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg3);
+  color: var(--text3);
+  font-size: clamp(12px, 3vw, 14px);
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* LANDSCAPE ORIENTATION                                               */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media (max-height: 500px) and (orientation: landscape) {
+  [data-video-grid] {
+    gap: clamp(4px, 1vw, 6px);
+    padding: clamp(6px, 1vw, 8px);
+    max-height: 70vh;
+  }
+
+  [data-video-tile] {
+    min-height: clamp(80px, 15vh, 150px);
+    aspect-ratio: 16 / 9;
+  }
+
+  [data-video-label] {
+    font-size: clamp(8px, 1.5vw, 10px);
+    padding: clamp(2px, 0.5vw, 4px) clamp(4px, 1vw, 6px);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* SCROLLBAR STYLING FOR VIDEO GRID                                     */
+/* ════════════════════════════════════════════════════════════════════ */
+
+[data-video-grid] {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+[data-video-grid]::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+[data-video-grid]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-video-grid]::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+}
+
+[data-video-grid]::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* ANIMATIONS & TRANSITIONS                                             */
+/* ════════════════════════════════════════════════════════════════════ */
+
+[data-video-tile] {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-video-tile]:hover {
+  border-color: var(--border2);
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* TOUCH OPTIMIZATION                                                   */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media (hover: none) and (pointer: coarse) {
+  [data-video-grid] {
+    gap: clamp(4px, 1.5vw, 8px);
+  }
+
+  [data-video-tile] {
+    border-radius: var(--r-md);
+    min-height: clamp(100px, 22vh, 200px);
+  }
+
+  [data-video-label] {
+    padding: clamp(3px, 0.8vw, 5px) clamp(6px, 1.5vw, 8px);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* REDUCED MOTION                                                       */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  [data-video-grid],
+  [data-video-tile] {
+    transition: none !important;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* HIGH CONTRAST MODE                                                   */
+/* ════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-contrast: more) {
+  [data-video-tile] {
+    border-width: 2px;
+  }
+
+  [data-video-label] {
+    border-width: 2px;
+  }
+}

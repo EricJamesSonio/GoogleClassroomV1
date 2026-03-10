@@ -11,12 +11,16 @@ export default function MeetingRoomPage() {
   const navigate = useNavigate()
   const isEducator = user?.role === 'educator'
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  const [isTablet, setIsTablet] = useState(window.innerWidth < 1024)
   const [chatOpen, setChatOpen] = useState(!isMobile)
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth)
 
   // Handle responsive window resize
   useEffect(() => {
     const handleResize = () => {
+      setScreenWidth(window.innerWidth)
       setIsMobile(window.innerWidth < 768)
+      setIsTablet(window.innerWidth < 1024)
       if (window.innerWidth >= 1024) setChatOpen(true)
     }
     window.addEventListener('resize', handleResize)
@@ -145,15 +149,47 @@ export default function MeetingRoomPage() {
     setChatInput('')
   }
 
-  // ── Helper function for video grid columns ────────────────
-  const getGridCols = () => {
+  // ── Google Meet style grid calculation ────────────────────
+  const totalParticipants = remoteUsers.length + (joined ? 1 : 0)
+  
+  const getGridLayout = () => {
+    // Mobile: 1 or 2 columns
     if (isMobile) {
-      return remoteUsers.length === 0 ? '1fr' : '1fr 1fr'
+      if (totalParticipants === 1) return { cols: 1, rows: 1 }
+      return { cols: 2, rows: Math.ceil(totalParticipants / 2) }
     }
-    if (remoteUsers.length === 0) return '1fr'
-    if (remoteUsers.length === 1) return '1fr 1fr'
-    return 'repeat(3, 1fr)'
+    
+    // Tablet without chat: 2-3 columns
+    if (isTablet && chatOpen) {
+      if (totalParticipants <= 2) return { cols: 1, rows: totalParticipants }
+      if (totalParticipants <= 4) return { cols: 2, rows: 2 }
+      if (totalParticipants <= 6) return { cols: 2, rows: 3 }
+      return { cols: 3, rows: Math.ceil(totalParticipants / 3) }
+    }
+
+    // Tablet with full video: 2-4 columns
+    if (isTablet && !chatOpen) {
+      if (totalParticipants === 1) return { cols: 1, rows: 1 }
+      if (totalParticipants === 2) return { cols: 2, rows: 1 }
+      if (totalParticipants <= 4) return { cols: 2, rows: 2 }
+      if (totalParticipants <= 6) return { cols: 3, rows: 2 }
+      if (totalParticipants <= 9) return { cols: 3, rows: 3 }
+      return { cols: 4, rows: Math.ceil(totalParticipants / 4) }
+    }
+
+    // Desktop: optimal Google Meet grid
+    if (totalParticipants === 1) return { cols: 1, rows: 1 }
+    if (totalParticipants === 2) return { cols: 2, rows: 1 }
+    if (totalParticipants === 3) return { cols: 3, rows: 1 }
+    if (totalParticipants === 4) return { cols: 2, rows: 2 }
+    if (totalParticipants <= 6) return { cols: 3, rows: 2 }
+    if (totalParticipants <= 9) return { cols: 3, rows: 3 }
+    if (totalParticipants <= 12) return { cols: 4, rows: 3 }
+    return { cols: 4, rows: Math.ceil(totalParticipants / 4) }
   }
+
+  const layout = getGridLayout()
+  const gridTemplateColumns = `repeat(${layout.cols}, 1fr)`
 
   // ── Screens ───────────────────────────────────────────────
   if (isLoading) return <div style={s.fullCenter}><div style={s.loadingText}>Loading meeting...</div></div>
@@ -192,7 +228,7 @@ export default function MeetingRoomPage() {
           <span style={s.meetingTitle}>{meeting?.title}</span>
         </div>
         <div style={s.topRight}>
-          <span style={s.participantCount}>👥 {remoteUsers.length + (joined ? 1 : 0)}</span>
+          <span style={s.participantCount}>👥 {totalParticipants}</span>
           {!isMobile && isEducator && (
             <button style={s.endBtn} onClick={() => { if (confirm('End meeting for everyone?')) endMeetingMutation.mutate() }}>
               End Meeting
@@ -210,16 +246,18 @@ export default function MeetingRoomPage() {
       </div>
 
       <div style={s.body}>
-        {/* Video Section */}
+        {/* Video Section - Google Meet Style Grid */}
         <div style={{ ...s.videoSection, flex: isMobile && chatOpen ? 0 : 1 }}>
           {agoraError && <div style={s.agoraError}>⚠️ {agoraError}</div>}
           {!joined && !agoraError && (
             <div style={s.joiningOverlay}>
               <div style={s.spinner} />
-              <p style={{ color: 'rgba(255,255,255,0.6)', marginTop: '16px', fontFamily: "'Arial', sans-serif" }}>Connecting to video...</p>
+              <p style={{ color: 'rgba(255,255,255,0.6)', marginTop: '16px' }}>Connecting to video...</p>
             </div>
           )}
-          <div style={{ ...s.videoGrid, gridTemplateColumns: getGridCols() }}>
+          
+          <div style={{ ...s.videoGrid, gridTemplateColumns }}>
+            {/* Local video - always first */}
             <div style={s.videoTile}>
               <div ref={localVideoRef} style={s.videoEl} />
               {!camOn && <div style={s.camOffOverlay}>📷 Camera off</div>}
@@ -228,13 +266,19 @@ export default function MeetingRoomPage() {
                 {!micOn && <span>🔇</span>}
               </div>
             </div>
+            
+            {/* Remote videos */}
             {remoteUsers.map((u) => (
               <div key={u.uid} style={s.videoTile}>
                 <div id={`remote-${u.uid}`} style={s.videoEl} />
-                <div style={s.videoLabel}><span>Participant</span></div>
+                <div style={s.videoLabel}>
+                  <span>Participant</span>
+                </div>
               </div>
             ))}
           </div>
+
+          {/* Controls */}
           <div style={s.controls}>
             <button style={{ ...s.controlBtn, ...(micOn ? {} : s.controlBtnOff) }} onClick={toggleMic} title={micOn ? 'Mute' : 'Unmute'}>
               {micOn ? '🎤' : '🔇'}
@@ -394,12 +438,14 @@ const s = {
   leaveBtn: { background:'var(--surface)', border:'1px solid var(--border2)', color:'var(--text2)', borderRadius:'var(--r)', padding:'clamp(6px, 1vw, 8px) clamp(10px, 2vw, 16px)', fontSize:'clamp(11px, 2vw, 13px)', cursor:'pointer', fontFamily:'var(--font-body)', minHeight:'40px' },
   
   body: { display:'flex', flex:1, overflow:'hidden' },
+  
+  /* Video Grid - GOOGLE MEET STYLE */
   videoSection: { flex:1, display:'flex', flexDirection:'column', position:'relative', background:'#07060d', overflow:'hidden' },
-  videoGrid: { flex:1, display:'grid', gap:'clamp(6px, 2vw, 8px)', padding:'clamp(8px, 2vw, 16px)', overflow:'auto' },
-  videoTile: { position:'relative', background:'var(--bg3)', borderRadius:'var(--r-md)', overflow:'hidden', minHeight:'clamp(150px, 30vh, 250px)', border:'1px solid var(--border)' },
+  videoGrid: { flex:1, display:'grid', gap:'clamp(6px, 1.5vw, 12px)', padding:'clamp(8px, 2vw, 16px)', overflow:'auto', justifyItems:'stretch', alignItems:'stretch' },
+  videoTile: { position:'relative', background:'var(--bg3)', borderRadius:'var(--r-md)', overflow:'hidden', minHeight:'clamp(120px, 25vh, 400px)', border:'1px solid var(--border)', aspectRatio:'16 / 9' },
   videoEl: { width:'100%', height:'100%', objectFit:'cover' },
   camOffOverlay: { position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', background:'var(--bg3)', color:'var(--text3)', fontSize:'clamp(12px, 3vw, 14px)', flexDirection:'column', gap:'8px' },
-  videoLabel: { position:'absolute', bottom:'10px', left:'10px', display:'flex', alignItems:'center', gap:'6px', background:'rgba(0,0,0,0.7)', backdropFilter:'blur(6px)', borderRadius:'var(--r-sm)', padding:'clamp(4px, 1vw, 5px) clamp(6px, 2vw, 10px)', fontSize:'clamp(10px, 2vw, 12px)', color:'#fff', border:'1px solid rgba(255,255,255,0.08)', fontFamily:'var(--font-body)' },
+  videoLabel: { position:'absolute', bottom:'10px', left:'10px', display:'flex', alignItems:'center', gap:'6px', background:'rgba(0,0,0,0.7)', backdropFilter:'blur(6px)', borderRadius:'var(--r-sm)', padding:'clamp(4px, 1vw, 5px) clamp(6px, 2vw, 10px)', fontSize:'clamp(10px, 2vw, 12px)', color:'#fff', border:'1px solid rgba(255,255,255,0.08)', fontFamily:'var(--font-body)', zIndex:5 },
   
   controls: { display:'flex', justifyContent:'center', gap:'clamp(6px, 2vw, 10px)', padding:'clamp(10px, 2vw, 16px)', borderTop:'1px solid var(--border)', flexShrink:0, background:'var(--bg2)', flexWrap:'wrap' },
   controlBtn: { display:'flex', flexDirection:'column', alignItems:'center', gap:'4px', background:'var(--surface)', border:'1px solid var(--border2)', borderRadius:'var(--r-md)', padding:'clamp(8px, 1vw, 12px) clamp(10px, 2vw, 18px)', cursor:'pointer', color:'var(--text)', fontSize:'clamp(14px, 4vw, 18px)', minHeight:'44px', minWidth:'44px', fontFamily:'var(--font-body)', transition:'all 0.15s' },
@@ -408,7 +454,7 @@ const s = {
   
   joiningOverlay: { position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', background:'#07060d', zIndex:10 },
   spinner: { width:'36px', height:'36px', border:'3px solid var(--border2)', borderTop:'3px solid var(--stu)', borderRadius:'50%', animation:'spin 0.8s linear infinite' },
-  agoraError: { position:'absolute', top:'16px', left:'50%', transform:'translateX(-50%)', background:'var(--red-bg)', border:'1px solid rgba(248,113,113,0.25)', color:'var(--red)', borderRadius:'var(--r)', padding:'clamp(8px, 1vw, 10px) clamp(12px, 2vw, 20px)', fontSize:'clamp(11px, 2vw, 13px)', zIndex:20, whiteSpace:'nowrap' },
+  agoraError: { position:'absolute', top:'16px', left:'50%', transform:'translateX(-50%)', background:'var(--red-bg)', border:'1px solid rgba(248,113,113,0.25)', color:'var(--red)', borderRadius:'var(--r)', padding:'clamp(8px, 1vw, 10px) clamp(12px, 2vw, 20px)', fontSize:'clamp(11px, 2vw, 13px)', zIndex:20 },
   
   chatSection: { width:'clamp(200px, 25vw, 312px)', display:'flex', flexDirection:'column', borderLeft:'1px solid var(--border)', background:'var(--bg2)', flexShrink:0 },
   chatDrawer: { position:'fixed', bottom:0, right:0, width:'100%', maxWidth:'100%', height:'50vh', background:'var(--bg2)', borderTop:'1px solid var(--border)', zIndex:40, display:'flex', flexDirection:'column', borderRadius:'var(--r-lg) var(--r-lg) 0 0', boxShadow:'var(--shadow-xl)' },
