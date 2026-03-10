@@ -1,17 +1,15 @@
 from fastapi import WebSocket, WebSocketDisconnect
-from typing import Optional
 from app.core.security import decode_access_token
 from app.models.user import User
 from app.models.meeting import Meeting
 from app.models.message import MeetingMessage
 from app.models.meeting_invitation import MeetingInvitation
-from beanie import PydanticObjectId
+from app.models.class_member import ClassMember
 from datetime import datetime, timezone
 
 
 class ConnectionManager:
     def __init__(self):
-        # meeting_id → list of (websocket, user) tuples
         self.active: dict[str, list[tuple[WebSocket, User]]] = {}
 
     async def connect(self, meeting_id: str, ws: WebSocket, user: User):
@@ -35,7 +33,6 @@ class ConnectionManager:
                 await ws.send_json(message)
             except Exception:
                 dead.append(ws)
-        # Clean up dead connections
         for ws in dead:
             self.disconnect(meeting_id, ws)
 
@@ -52,7 +49,6 @@ manager = ConnectionManager()
 
 
 async def _authenticate(token: str) -> User | None:
-    """Decode JWT and return User, or None if invalid."""
     payload = decode_access_token(token)
     if not payload:
         return None
@@ -62,19 +58,44 @@ async def _authenticate(token: str) -> User | None:
     return await User.get(user_id)
 
 
-async def _can_join_chat(meeting: Meeting, user: User) -> bool:
-    """Check user is allowed in this meeting chat."""
-    # Meeting creator always allowed
+async def _ensure_authorized(meeting: Meeting, user: User) -> bool:
+    """
+    Allow if:
+    - user is the meeting creator, OR
+    - user has any non-rejected invitation, OR
+    - user is a class member (auto-create accepted invitation)
+    """
     if str(meeting.created_by) == str(user.id):
         return True
 
-    # Must have accepted invitation
     invitation = await MeetingInvitation.find_one(
         MeetingInvitation.meeting_id == meeting.id,
         MeetingInvitation.user_id == user.id,
-        MeetingInvitation.status.in_(["accepted", "invited"]),
     )
-    return invitation is not None
+
+    if invitation:
+        if invitation.status == "rejected":
+            return False
+        if invitation.status in ("invited", "requested"):
+            invitation.status = "accepted"
+            await invitation.save()
+        return True
+
+    # No invitation — check class membership and auto-allow
+    membership = await ClassMember.find_one(
+        ClassMember.class_id == meeting.class_id,
+        ClassMember.user_id == user.id,
+    )
+    if membership:
+        await MeetingInvitation(
+            meeting_id=meeting.id,
+            user_id=user.id,
+            invited_by=user.id,
+            status="accepted",
+        ).insert()
+        return True
+
+    return False
 
 
 async def handle_meeting_chat(websocket: WebSocket, meeting_id: str, token: str):
@@ -95,15 +116,15 @@ async def handle_meeting_chat(websocket: WebSocket, meeting_id: str, token: str)
         return
 
     # Authorize
-    allowed = await _can_join_chat(meeting, user)
+    allowed = await _ensure_authorized(meeting, user)
     if not allowed:
-        await websocket.close(code=4003, reason="Not invited to this meeting")
+        await websocket.close(code=4003, reason="Not authorized for this meeting")
         return
 
     # Connect
     await manager.connect(meeting_id, websocket, user)
 
-    # Send last 50 messages as history on connect
+    # Send history
     history = await MeetingMessage.find(
         MeetingMessage.meeting_id == meeting.id
     ).sort("+created_at").limit(50).to_list()
@@ -123,7 +144,7 @@ async def handle_meeting_chat(websocket: WebSocket, meeting_id: str, token: str)
         "online_users": manager.get_online_users(meeting_id),
     })
 
-    # Broadcast join event to others
+    # Announce join
     await manager.broadcast(meeting_id, {
         "type": "user_joined",
         "user_id": str(user.id),
@@ -135,11 +156,9 @@ async def handle_meeting_chat(websocket: WebSocket, meeting_id: str, token: str)
         while True:
             data = await websocket.receive_json()
             msg_text = data.get("message", "").strip()
-
             if not msg_text:
                 continue
 
-            # Persist to DB
             msg = MeetingMessage(
                 meeting_id=meeting.id,
                 sender_id=user.id,
@@ -149,7 +168,6 @@ async def handle_meeting_chat(websocket: WebSocket, meeting_id: str, token: str)
             )
             await msg.insert()
 
-            # Broadcast to all in meeting
             await manager.broadcast(meeting_id, {
                 "type": "message",
                 "id": str(msg.id),
