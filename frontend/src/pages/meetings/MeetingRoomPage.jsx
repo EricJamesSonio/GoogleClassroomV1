@@ -61,7 +61,16 @@ export default function MeetingRoomPage() {
       client.on('user-left', (u) => setRemoteUsers((prev) => prev.filter((r) => r.uid !== u.uid)))
 
       await client.join(app_id, channel, token, uid)
-      const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks()
+      const [audioTrack, videoTrack] = await AgoraRTC.createMicrophoneAndCameraTracks(
+        { AEC: true, ANS: true },
+        {
+          encoderConfig: {
+            width: 640, height: 360,
+            frameRate: 15,
+            bitrateMin: 200, bitrateMax: 500,
+          },
+        }
+      )
       setLocalTracks({ audio: audioTrack, video: videoTrack })
       await client.publish([audioTrack, videoTrack])
       if (localVideoRef.current) videoTrack.play(localVideoRef.current)
