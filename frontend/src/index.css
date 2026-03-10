@@ -141,15 +141,11 @@ body::before {
 }
 
 /* ════════════════════════════════════════════════════════════════════ */
-/* LAYOUT RESPONSIVE STYLES - ADD TO YOUR GLOBAL CSS FILE             */
+/* RESPONSIVE LAYOUT STYLES - DESKTOP, TABLET, MOBILE                 */
 /* ════════════════════════════════════════════════════════════════════ */
 
-/* ════════════════════════════════════════════════════════════════════ */
-/* DESKTOP (1025px+) - DEFAULT LAYOUT                                  */
-/* ════════════════════════════════════════════════════════════════════ */
-
+/* DESKTOP (1025px+) - DEFAULT LAYOUT */
 @media (min-width: 1025px) {
-  /* Sidebar always visible on desktop */
   [data-sidebar] {
     position: fixed;
     transform: translateX(0) !important;
@@ -157,33 +153,25 @@ body::before {
     min-height: 100vh;
   }
 
-  /* Hide mobile header on desktop */
   [data-mobile-header] {
     display: none !important;
   }
 
-  /* Hide overlay on desktop */
   [data-overlay] {
     display: none !important;
   }
 
-  /* Main content has left margin for sidebar */
   [data-main] {
     margin-left: 240px;
   }
 
-  /* Full padding on desktop */
   [data-main-inner] {
     padding: 44px 44px;
   }
 }
 
-/* ════════════════════════════════════════════════════════════════════ */
-/* TABLET (769px - 1024px) - COLLAPSIBLE SIDEBAR                       */
-/* ════════════════════════════════════════════════════════════════════ */
-
+/* TABLET (769px - 1024px) - COLLAPSIBLE SIDEBAR */
 @media (max-width: 1024px) {
-  /* Sidebar slides in from left on tablet */
   [data-sidebar] {
     position: fixed;
     width: 100%;
@@ -197,12 +185,10 @@ body::before {
     bottom: 0;
   }
 
-  /* Sidebar visible when open */
   [data-sidebar].open {
     transform: translateX(0);
   }
 
-  /* Show overlay when sidebar open */
   [data-overlay] {
     display: none;
   }
@@ -216,23 +202,17 @@ body::before {
     animation: fadeIn 0.2s ease;
   }
 
-  /* Main content takes full width */
   [data-main] {
     margin-left: 0;
   }
 
-  /* Reduce padding on tablet */
   [data-main-inner] {
     padding: 32px 28px;
   }
 }
 
-/* ════════════════════════════════════════════════════════════════════ */
-/* MOBILE (577px - 768px) - HAMBURGER MENU                             */
-/* ════════════════════════════════════════════════════════════════════ */
-
+/* MOBILE (577px - 768px) - HAMBURGER MENU */
 @media (max-width: 768px) {
-  /* Show mobile header */
   [data-mobile-header] {
     display: flex !important;
     position: fixed;
@@ -243,7 +223,6 @@ body::before {
     z-index: 30;
   }
 
-  /* Sidebar slides in from left */
   [data-sidebar] {
     max-width: 70vw;
     transform: translateX(-100%);
@@ -253,7 +232,6 @@ body::before {
     transform: translateX(0);
   }
 
-  /* Show/hide overlay */
   [data-overlay] {
     display: none;
   }
@@ -262,18 +240,15 @@ body::before {
     display: block;
   }
 
-  /* Main content pushed down by fixed header */
   [data-main] {
     margin-left: 0;
     padding-top: 56px;
   }
 
-  /* Padding for mobile */
   [data-main-inner] {
     padding: 24px 20px;
   }
 
-  /* Smaller fonts on mobile */
   h1 {
     font-size: clamp(22px, 6vw, 28px);
   }
@@ -286,25 +261,19 @@ body::before {
     font-size: clamp(16px, 4vw, 20px);
   }
 
-  /* Better mobile button sizes */
   button {
     min-height: 44px;
     min-width: 44px;
   }
 }
 
-/* ════════════════════════════════════════════════════════════════════ */
-/* SMALL MOBILE (≤ 576px) - COMPACT LAYOUT                             */
-/* ════════════════════════════════════════════════════════════════════ */
-
+/* SMALL MOBILE (≤ 576px) - COMPACT LAYOUT */
 @media (max-width: 576px) {
-  /* Show mobile header */
   [data-mobile-header] {
     display: flex !important;
     height: 52px;
   }
 
-  /* Narrower sidebar on small screens */
   [data-sidebar] {
     max-width: 80vw;
     padding: 12px 8px;
@@ -316,12 +285,10 @@ body::before {
     gap: 8px;
   }
 
-  /* Very compact padding on small screens */
   [data-main-inner] {
     padding: 16px 12px;
   }
 
-  /* Responsive typography */
   h1 {
     font-size: clamp(20px, 5vw, 26px);
   }
@@ -338,7 +305,6 @@ body::before {
     font-size: clamp(13px, 2vw, 15px);
   }
 
-  /* Compact brand section */
   [data-brand] {
     gap: 6px;
   }
@@ -352,20 +318,17 @@ body::before {
     font-size: 14px;
   }
 
-  /* Compact role badge */
   [data-role-badge] {
     padding: 4px 8px;
     font-size: 9px;
   }
 
-  /* Compact avatar */
   [data-avatar] {
     width: 28px;
     height: 28px;
     font-size: 11px;
   }
 
-  /* Compact user info */
   [data-user-name] {
     font-size: 12px;
   }
@@ -375,23 +338,17 @@ body::before {
   }
 }
 
-/* ════════════════════════════════════════════════════════════════════ */
-/* LANDSCAPE ORIENTATION (Mobile landscape)                            */
-/* ════════════════════════════════════════════════════════════════════ */
-
+/* LANDSCAPE ORIENTATION (Mobile landscape) */
 @media (max-height: 500px) and (orientation: landscape) {
-  /* Compact header in landscape */
   [data-mobile-header] {
     height: 48px;
     padding: 8px;
   }
 
-  /* Tight sidebar padding */
   [data-sidebar] {
     padding: 8px 6px;
   }
 
-  /* Smaller fonts in landscape */
   body {
     font-size: 13px;
   }
@@ -404,13 +361,11 @@ body::before {
     font-size: clamp(14px, 2.5vh, 18px);
   }
 
-  /* Less vertical space for nav items */
   [data-nav-item] {
     padding: 6px 10px;
     min-height: 40px;
   }
 
-  /* Compact user section */
   [data-user-row] {
     padding: 4px 6px;
   }
@@ -421,59 +376,45 @@ body::before {
     font-size: 10px;
   }
 
-  /* Less footer padding */
   [data-footer] {
     padding-top: 8px;
     gap: 6px;
   }
 }
 
-/* ════════════════════════════════════════════════════════════════════ */
-/* TOUCH DEVICES - IMPROVE INTERACTION TARGETS                         */
-/* ════════════════════════════════════════════════════════════════════ */
-
+/* TOUCH DEVICES - IMPROVE INTERACTION TARGETS */
 @media (hover: none) and (pointer: coarse) {
-  /* Larger buttons on touch devices */
   button, a, [role="button"] {
     min-height: 44px;
     min-width: 44px;
     padding: clamp(8px, 2vw, 12px);
   }
 
-  /* Visual feedback on tap */
   button:active {
     opacity: 0.7;
   }
 
-  /* Larger touch targets for sidebar */
   [data-sidebar] [data-nav-item] {
     min-height: 48px;
     padding: 10px 14px;
   }
 
-  /* Bigger hamburger on touch */
   [data-hamburger] {
     min-height: 48px;
     min-width: 48px;
   }
 }
 
-/* ════════════════════════════════════════════════════════════════════ */
-/* REDUCE MOTION - RESPECT USER PREFERENCES                            */
-/* ════════════════════════════════════════════════════════════════════ */
-
+/* REDUCE MOTION - RESPECT USER PREFERENCES */
 @media (prefers-reduced-motion: reduce) {
-  /* Remove sidebar animation */
   [data-sidebar] {
     transition: none !important;
   }
 
-  /* Remove all animations */
   * {
     animation: none !important;
   }
 
-  /* Remove transitions */
   *,
   *::before,
   *::after {
@@ -481,18 +422,12 @@ body::before {
   }
 }
 
-/* ════════════════════════════════════════════════════════════════════ */
-/* DARK MODE - OPTIONAL (if you want explicit dark mode)              */
-/* ════════════════════════════════════════════════════════════════════ */
-
+/* DARK MODE - OPTIONAL */
 @media (prefers-color-scheme: dark) {
   /* Already using CSS variables, so this adapts automatically */
 }
 
-/* ════════════════════════════════════════════════════════════════════ */
-/* KEYFRAME ANIMATIONS                                                 */
-/* ════════════════════════════════════════════════════════════════════ */
-
+/* KEYFRAME ANIMATIONS */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -511,31 +446,22 @@ body::before {
   }
 }
 
-/* ════════════════════════════════════════════════════════════════════ */
-/* PRINT STYLES - OPTIONAL                                             */
-/* ════════════════════════════════════════════════════════════════════ */
-
+/* PRINT STYLES - OPTIONAL */
 @media print {
-  /* Hide sidebar when printing */
   [data-sidebar] {
     display: none;
   }
 
-  /* Full width on print */
   [data-main] {
     margin-left: 0;
   }
 
-  /* Hide mobile header when printing */
   [data-mobile-header] {
     display: none !important;
   }
 }
 
-/* ════════════════════════════════════════════════════════════════════ */
-/* SCROLLBAR STYLING                                                   */
-/* ════════════════════════════════════════════════════════════════════ */
-
+/* SCROLLBAR STYLING */
 [data-sidebar] {
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
@@ -558,10 +484,7 @@ body::before {
   background: rgba(255, 255, 255, 0.15);
 }
 
-/* ════════════════════════════════════════════════════════════════════ */
-/* ACCESSIBILITY - HIGH CONTRAST MODE                                 */
-/* ════════════════════════════════════════════════════════════════════ */
-
+/* ACCESSIBILITY - HIGH CONTRAST MODE */
 @media (prefers-contrast: more) {
   [data-sidebar] {
     border-right-width: 2px;
@@ -581,10 +504,7 @@ body::before {
   }
 }
 
-/* ════════════════════════════════════════════════════════════════════ */
-/* FOCUS STATES - KEYBOARD NAVIGATION                                  */
-/* ════════════════════════════════════════════════════════════════════ */
-
+/* FOCUS STATES - KEYBOARD NAVIGATION */
 [data-nav-item]:focus-visible,
 [data-hamburger]:focus-visible,
 [data-logout-btn]:focus-visible {
@@ -592,14 +512,487 @@ body::before {
   outline-offset: 2px;
 }
 
-/* ════════════════════════════════════════════════════════════════════ */
-/* SMOOTH SCROLLING                                                     */
-/* ════════════════════════════════════════════════════════════════════ */
-
+/* SMOOTH SCROLLING */
 html {
   scroll-behavior: smooth;
 }
 
 [data-sidebar] {
   -webkit-overflow-scrolling: touch;
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* RESPONSIVE LOGIN PAGE - ADD TO YOUR index.css                       */
+/* ════════════════════════════════════════════════════════════════════ */
+
+/* MOBILE (max-width: 768px) - Single column, hide left panel */
+@media (max-width: 768px) {
+  [data-login-page] {
+    padding: clamp(12px, 3vw, 16px);
+    min-height: 100vh;
+    align-items: flex-start;
+  }
+
+  [data-login-wrap] {
+    flex-direction: column !important;
+    min-height: auto;
+    max-width: 100%;
+    width: 100%;
+    border-radius: var(--r-lg);
+    margin-top: 24px;
+  }
+
+  [data-login-left] {
+    display: none !important;
+  }
+
+  [data-login-right] {
+    flex: 1;
+    width: 100%;
+    padding: clamp(24px, 5vw, 36px) clamp(16px, 4vw, 24px);
+  }
+
+  [data-login-blob1],
+  [data-login-blob2],
+  [data-login-blob3] {
+    opacity: 0.5;
+  }
+}
+
+/* TABLET (769px - 1024px) - Two columns with responsive sizing */
+@media (min-width: 769px) and (max-width: 1024px) {
+  [data-login-wrap] {
+    flex-direction: row !important;
+    min-height: auto;
+    max-width: 900px;
+    gap: 0;
+  }
+
+  [data-login-left] {
+    flex: 0 0 45%;
+    padding: clamp(28px, 4vw, 40px);
+    border-right: 1px solid var(--border);
+  }
+
+  [data-login-right] {
+    flex: 0 0 55%;
+    padding: clamp(24px, 4vw, 36px);
+  }
+
+  [data-login-leftBody] {
+    flex: 1;
+  }
+}
+
+/* DESKTOP (1025px+) - Default full layout */
+@media (min-width: 1025px) {
+  [data-login-page] {
+    padding: 24px;
+  }
+
+  [data-login-wrap] {
+    flex-direction: row !important;
+    max-width: 1000px;
+    min-height: 600px;
+  }
+
+  [data-login-left] {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 48px 44px;
+    border-right: 1px solid var(--border);
+  }
+
+  [data-login-right] {
+    flex: 0 0 420px;
+    padding: 48px 44px;
+  }
+}
+
+/* SMALL MOBILE (≤ 576px) - Compact layout */
+@media (max-width: 576px) {
+  [data-login-page] {
+    padding: clamp(8px, 2vw, 12px);
+  }
+
+  [data-login-wrap] {
+    border-radius: var(--r-md);
+    margin-top: 12px;
+  }
+
+  [data-login-right] {
+    padding: clamp(16px, 3vw, 20px) clamp(12px, 3vw, 16px);
+  }
+
+  [data-login-form-title] {
+    font-size: clamp(18px, 5vw, 24px);
+  }
+
+  [data-login-field] input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}
+
+/* LANDSCAPE ORIENTATION */
+@media (max-height: 500px) and (orientation: landscape) {
+  [data-login-page] {
+    padding: 12px;
+  }
+
+  [data-login-wrap] {
+    min-height: auto;
+    max-height: 95vh;
+    overflow-y: auto;
+  }
+
+  [data-login-left] {
+    padding: 16px 20px;
+  }
+
+  [data-login-leftBody] {
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  [data-login-right] {
+    padding: 16px 20px;
+  }
+
+  [data-login-form-title] {
+    font-size: clamp(18px, 4vw, 24px);
+    margin-bottom: 8px;
+  }
+
+  [data-login-leftHeading] {
+    font-size: clamp(20px, 5vw, 28px);
+    margin-bottom: 8px;
+  }
+
+  [data-login-features] {
+    gap: 6px;
+  }
+
+  [data-login-feat] {
+    gap: 6px;
+  }
+
+  [data-login-leftFoot] {
+    padding-top: 12px;
+    gap: 8px;
+  }
+
+  [data-login-stackLabel] {
+    font-size: 10px;
+  }
+}
+
+/* TOUCH DEVICES - IMPROVE TOUCH TARGETS */
+@media (hover: none) and (pointer: coarse) {
+  [data-login-form] button,
+  [data-login-input-wrap] {
+    min-height: 48px;
+  }
+
+  [data-login-form] input {
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    padding: 12px 0;
+  }
+
+  [data-login-devBtn] {
+    min-height: 44px;
+  }
+}
+
+/* REDUCE MOTION */
+@media (prefers-reduced-motion: reduce) {
+  [data-login-page] * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* KEYBOARD NAVIGATION */
+[data-login-form] button:focus-visible,
+[data-login-form] input:focus-visible {
+  outline: 2px solid var(--stu);
+  outline-offset: 2px;
+}
+
+/* HIGH CONTRAST MODE */
+@media (prefers-contrast: more) {
+  [data-login-wrap] {
+    border-width: 2px;
+  }
+
+  [data-login-form] input {
+    border-width: 2px;
+  }
+}
+
+/* DARK MODE - Already handled by CSS variables */
+@media (prefers-color-scheme: dark) {
+  /* Uses existing dark palette */
+}
+
+/* ════════════════════════════════════════════════════════════════════ */
+/* RESPONSIVE MEETING ROOM PAGE - ADD TO YOUR index.css                */
+/* ════════════════════════════════════════════════════════════════════ */
+
+/* MOBILE (max-width: 768px) - Chat drawer, full video */
+@media (max-width: 768px) {
+  [data-meeting-room] {
+    height: 100vh;
+  }
+
+  [data-meeting-topbar] {
+    padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 16px);
+    flex-wrap: wrap;
+  }
+
+  [data-meeting-topleft] {
+    gap: clamp(8px, 2vw, 12px);
+  }
+
+  [data-meeting-topright] {
+    gap: clamp(6px, 2vw, 8px);
+  }
+
+  [data-meeting-body] {
+    flex-direction: column;
+  }
+
+  [data-meeting-videosection] {
+    flex: 1;
+    min-height: 0;
+  }
+
+  [data-meeting-chatsection] {
+    display: none !important;
+  }
+
+  [data-meeting-videogrid] {
+    gap: clamp(6px, 2vw, 8px);
+    padding: clamp(8px, 2vw, 12px);
+  }
+
+  [data-meeting-videotile] {
+    min-height: clamp(120px, 25vh, 200px);
+  }
+
+  [data-meeting-controls] {
+    gap: clamp(6px, 2vw, 8px);
+    padding: clamp(8px, 2vw, 12px);
+    flex-wrap: wrap;
+  }
+
+  [data-meeting-controlbtn] {
+    font-size: clamp(14px, 4vw, 16px);
+    min-height: 44px;
+    min-width: 44px;
+    padding: clamp(8px, 1vw, 10px) clamp(10px, 2vw, 14px);
+  }
+
+  /* Chat drawer on mobile */
+  [data-meeting-chatdrawer] {
+    display: flex;
+  }
+}
+
+/* TABLET (769px - 1024px) - Side-by-side with collapsible chat */
+@media (min-width: 769px) and (max-width: 1024px) {
+  [data-meeting-room] {
+    flex-direction: column;
+  }
+
+  [data-meeting-body] {
+    flex: 1;
+    display: flex;
+  }
+
+  [data-meeting-videosection] {
+    flex: 1;
+  }
+
+  [data-meeting-chatsection] {
+    width: clamp(200px, 25vw, 280px) !important;
+    display: flex;
+  }
+
+  [data-meeting-videogrid] {
+    gap: clamp(6px, 2vw, 8px);
+  }
+
+  [data-meeting-controls] {
+    gap: clamp(6px, 2vw, 8px);
+  }
+
+  [data-meeting-controlbtn] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  [data-meeting-chatdrawer] {
+    display: none !important;
+  }
+}
+
+/* DESKTOP (1025px+) - Default full layout */
+@media (min-width: 1025px) {
+  [data-meeting-room] {
+    height: 100vh;
+  }
+
+  [data-meeting-body] {
+    flex: 1;
+    display: flex;
+  }
+
+  [data-meeting-videosection] {
+    flex: 1;
+  }
+
+  [data-meeting-chatsection] {
+    width: 312px;
+    display: flex;
+  }
+
+  [data-meeting-videogrid] {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 16px;
+  }
+
+  [data-meeting-controls] {
+    gap: 10px;
+    padding: 16px;
+  }
+
+  [data-meeting-chatdrawer] {
+    display: none !important;
+  }
+}
+
+/* SMALL MOBILE (≤ 576px) - Compact layout */
+@media (max-width: 576px) {
+  [data-meeting-topbar] {
+    padding: clamp(6px, 1.5vw, 8px) clamp(8px, 2vw, 12px);
+  }
+
+  [data-meeting-videotile] {
+    min-height: clamp(100px, 20vh, 150px);
+  }
+
+  [data-meeting-videolabel] {
+    font-size: clamp(8px, 2vw, 10px);
+    padding: clamp(2px, 0.5vw, 4px) clamp(4px, 1vw, 6px);
+  }
+
+  [data-meeting-topright] {
+    gap: clamp(4px, 1vw, 6px);
+  }
+
+  [data-meeting-participantcount] {
+    font-size: clamp(9px, 1.5vw, 11px);
+  }
+}
+
+/* LANDSCAPE ORIENTATION */
+@media (max-height: 500px) and (orientation: landscape) {
+  [data-meeting-room] {
+    height: auto;
+    min-height: 100vh;
+  }
+
+  [data-meeting-topbar] {
+    padding: clamp(6px, 1vw, 8px) clamp(12px, 2vw, 16px);
+    flex-wrap: nowrap;
+  }
+
+  [data-meeting-videogrid] {
+    max-height: 70vh;
+  }
+
+  [data-meeting-controls] {
+    padding: clamp(6px, 1vw, 8px);
+    gap: clamp(4px, 1vw, 6px);
+  }
+
+  [data-meeting-controlbtn] {
+    padding: clamp(6px, 0.5vw, 8px) clamp(8px, 1vw, 10px);
+    font-size: clamp(12px, 2vw, 14px);
+  }
+}
+
+/* TOUCH DEVICES - IMPROVE TOUCH TARGETS */
+@media (hover: none) and (pointer: coarse) {
+  [data-meeting-controlbtn],
+  [data-meeting-btn] {
+    min-height: 48px;
+    min-width: 48px;
+  }
+
+  [data-meeting-endbtn],
+  [data-meeting-leavebtn] {
+    min-height: 44px;
+  }
+
+  [data-meeting-chattoggle] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  [data-meeting-chatvideogrid] {
+    gap: clamp(8px, 2vw, 12px);
+  }
+}
+
+/* REDUCE MOTION */
+@media (prefers-reduced-motion: reduce) {
+  [data-meeting-room] * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* KEYBOARD NAVIGATION */
+[data-meeting-controlbtn]:focus-visible,
+[data-meeting-endbtn]:focus-visible,
+[data-meeting-leavebtn]:focus-visible {
+  outline: 2px solid var(--stu);
+  outline-offset: 2px;
+}
+
+/* HIGH CONTRAST MODE */
+@media (prefers-contrast: more) {
+  [data-meeting-topbar] {
+    border-bottom-width: 2px;
+  }
+
+  [data-meeting-controlbtn] {
+    border-width: 2px;
+  }
+}
+
+/* SCROLLBAR FOR CHAT */
+[data-meeting-messages] {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+[data-meeting-messages]::-webkit-scrollbar {
+  width: 4px;
+}
+
+[data-meeting-messages]::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+[data-meeting-messages]::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+
+[data-meeting-messages]::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.15);
 }
