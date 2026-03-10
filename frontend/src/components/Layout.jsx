@@ -4,182 +4,139 @@ import useAuthStore from '../store/authStore'
 export default function Layout({ children }) {
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
-
-  const handleLogout = () => {
-    logout()
-    navigate('/login')
-  }
+  const isEducator = user?.role === 'educator'
 
   const navItems = [
-    { to: '/dashboard', icon: '🏠', label: 'Dashboard' },
-    { to: '/classes', icon: '🏫', label: 'Classes' },
-    ...(user?.role === 'student'
-      ? [{ to: '/invitations', icon: '📩', label: 'Invitations' }]
-      : []
-    ),
+    { to:'/dashboard', label:'Dashboard', icon:HomeIcon },
+    { to:'/classes',   label:'Classes',   icon:ClassIcon },
+    ...(!isEducator ? [{ to:'/invitations', label:'Invitations', icon:InboxIcon }] : []),
   ]
 
   return (
-    <div style={styles.shell}>
-      {/* Sidebar */}
-      <aside style={styles.sidebar}>
-        <div style={styles.logoRow}>
-          <span style={styles.logoIcon}>🎓</span>
-          <span style={styles.logoText}>ClassRoom</span>
+    <div style={s.shell}>
+      <aside style={s.sidebar}>
+        {/* Brand */}
+        <div style={s.brand}>
+          <div style={{ ...s.brandMark, background: isEducator ? 'linear-gradient(135deg,#f59e0b,#d97706)' : 'linear-gradient(135deg,#818cf8,#6366f1)' }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+          <span style={s.brandName}>ClassRoom</span>
         </div>
 
-        <nav style={styles.nav}>
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              style={({ isActive }) => ({
-                ...styles.navItem,
-                ...(isActive ? styles.navItemActive : {}),
-              })}
-            >
-              <span style={styles.navIcon}>{item.icon}</span>
-              <span>{item.label}</span>
-            </NavLink>
-          ))}
+        {/* Role badge */}
+        <div style={{ ...s.roleBadge, ...(isEducator ? s.roleBadgeEdu : s.roleBadgeStu) }}>
+          <span style={s.roleDot}>{isEducator ? '◆' : '●'}</span>
+          {isEducator ? 'Educator' : 'Student'}
+        </div>
+
+        {/* Nav */}
+        <nav style={s.nav}>
+          <div style={s.navGroup}>
+            <div style={s.navGroupLabel}>Menu</div>
+            {navItems.map((item) => (
+              <NavLink key={item.to} to={item.to}
+                style={({ isActive }) => ({ ...s.navItem, ...(isActive ? (isEducator ? s.navItemActiveEdu : s.navItemActiveStu) : {}) })}>
+                {({ isActive }) => (
+                  <>
+                    <span style={{ ...s.navIcon, ...(isActive ? (isEducator ? s.navIconActiveEdu : s.navIconActiveStu) : {}) }}>
+                      <item.icon size={15} />
+                    </span>
+                    <span style={s.navLabel}>{item.label}</span>
+                    {isActive && <span style={{ ...s.navPip, ...(isEducator ? s.navPipEdu : s.navPipStu) }} />}
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </div>
         </nav>
 
-        <div style={styles.sidebarBottom}>
-          <div style={styles.userRow}>
-            <div style={styles.avatar}>
+        {/* Footer */}
+        <div style={s.foot}>
+          <div style={s.userRow}>
+            <div style={{ ...s.avatar, ...(isEducator ? s.avatarEdu : s.avatarStu) }}>
               {user?.name?.[0]?.toUpperCase()}
             </div>
-            <div style={styles.userInfo}>
-              <div style={styles.userName}>{user?.name}</div>
-              <div style={styles.userRole}>{user?.role}</div>
+            <div style={s.userInfo}>
+              <div style={s.userName}>{user?.name}</div>
+              <div style={s.userMeta}>{user?.email}</div>
             </div>
           </div>
-          <button style={styles.logoutBtn} onClick={handleLogout}>
+          <button style={s.logoutBtn} onClick={() => { logout(); navigate('/login') }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
             Sign out
           </button>
         </div>
       </aside>
 
-      {/* Main content */}
-      <main style={styles.main}>
-        {children}
+      <main style={s.main}>
+        <div style={s.mainInner}>{children}</div>
       </main>
     </div>
   )
 }
 
-const styles = {
-  shell: {
-    display: 'flex',
-    minHeight: '100vh',
-    background: '#0f0c29',
-    fontFamily: "'Arial', sans-serif",
-  },
-  sidebar: {
-    width: '240px',
-    minHeight: '100vh',
-    background: 'rgba(255,255,255,0.04)',
-    borderRight: '1px solid rgba(255,255,255,0.08)',
-    display: 'flex',
-    flexDirection: 'column',
-    padding: '24px 16px',
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    bottom: 0,
-  },
-  logoRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '0 8px',
-    marginBottom: '36px',
-  },
-  logoIcon: { fontSize: '22px' },
-  logoText: {
-    fontSize: '17px',
-    fontWeight: '700',
-    color: '#fff',
-    letterSpacing: '0.3px',
-  },
-  nav: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '4px',
-    flex: 1,
-  },
-  navItem: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '10px 12px',
-    borderRadius: '10px',
-    color: 'rgba(255,255,255,0.5)',
-    textDecoration: 'none',
-    fontSize: '14px',
-    fontWeight: '500',
-    transition: 'all 0.15s',
-  },
-  navItemActive: {
-    background: 'rgba(102,126,234,0.2)',
-    color: '#a78bfa',
-    fontWeight: '700',
-  },
-  navIcon: { fontSize: '16px' },
-  sidebarBottom: {
-    borderTop: '1px solid rgba(255,255,255,0.08)',
-    paddingTop: '16px',
-    display: 'flex',
-    flexDirection: 'column',
-    gap: '12px',
-  },
-  userRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-  },
-  avatar: {
-    width: '34px',
-    height: '34px',
-    borderRadius: '50%',
-    background: 'linear-gradient(135deg, #667eea, #764ba2)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#fff',
-    fontSize: '14px',
-    fontWeight: '700',
-    flexShrink: 0,
-  },
-  userInfo: { overflow: 'hidden' },
-  userName: {
-    color: '#fff',
-    fontSize: '13px',
-    fontWeight: '600',
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-  },
-  userRole: {
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: '11px',
-    textTransform: 'capitalize',
-  },
-  logoutBtn: {
-    background: 'transparent',
-    border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: '8px',
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: '12px',
-    padding: '7px',
-    cursor: 'pointer',
-    width: '100%',
-    textAlign: 'center',
-  },
-  main: {
-    marginLeft: '240px',
-    flex: 1,
-    padding: '40px',
-    color: '#fff',
-  },
+const HomeIcon = ({ size=16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+    <polyline points="9 22 9 12 15 12 15 22"/>
+  </svg>
+)
+const ClassIcon = ({ size=16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+  </svg>
+)
+const InboxIcon = ({ size=16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>
+    <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>
+  </svg>
+)
+
+const s = {
+  shell: { display:'flex', minHeight:'100vh', background:'var(--bg)', fontFamily:'var(--font-body)' },
+  sidebar: { width:'240px', minHeight:'100vh', background:'var(--bg2)', borderRight:'1px solid var(--border)', display:'flex', flexDirection:'column', padding:'20px 14px 20px', position:'fixed', top:0, left:0, bottom:0, zIndex:20 },
+
+  brand: { display:'flex', alignItems:'center', gap:'9px', padding:'4px 8px', marginBottom:'16px' },
+  brandMark: { width:'30px', height:'30px', borderRadius:'8px', display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0, transition:'background 0.4s' },
+  brandName: { fontFamily:'var(--font-head)', fontSize:'16px', fontWeight:'800', color:'var(--text)', letterSpacing:'-0.2px' },
+
+  roleBadge: { display:'inline-flex', alignItems:'center', gap:'6px', borderRadius:'6px', padding:'5px 10px', fontSize:'11px', fontWeight:'700', letterSpacing:'0.4px', textTransform:'uppercase', marginBottom:'20px', marginLeft:'8px', width:'fit-content' },
+  roleBadgeEdu: { background:'var(--edu-bg)', color:'var(--edu)', border:'1px solid var(--edu-border)' },
+  roleBadgeStu: { background:'var(--stu-bg)', color:'var(--stu)', border:'1px solid var(--stu-border)' },
+  roleDot: { fontSize:'8px' },
+
+  nav: { flex:1 },
+  navGroup: { display:'flex', flexDirection:'column', gap:'1px' },
+  navGroupLabel: { color:'var(--text4)', fontSize:'10px', fontWeight:'700', letterSpacing:'1px', textTransform:'uppercase', padding:'0 12px', marginBottom:'6px', marginTop:'4px' },
+  navItem: { display:'flex', alignItems:'center', gap:'10px', padding:'9px 12px', borderRadius:'var(--r)', color:'var(--text3)', textDecoration:'none', fontSize:'14px', fontWeight:'500', transition:'all 0.15s', position:'relative' },
+  navItemActiveEdu: { background:'var(--edu-bg)', color:'var(--edu)', fontWeight:'600' },
+  navItemActiveStu: { background:'var(--stu-bg)', color:'var(--stu)', fontWeight:'600' },
+  navIcon: { width:'26px', height:'26px', borderRadius:'6px', display:'flex', alignItems:'center', justifyContent:'center', color:'var(--text3)', transition:'all 0.15s', flexShrink:0 },
+  navIconActiveEdu: { background:'rgba(245,158,11,0.15)', color:'var(--edu)' },
+  navIconActiveStu: { background:'rgba(129,140,248,0.15)', color:'var(--stu)' },
+  navLabel: { flex:1 },
+  navPip: { width:'5px', height:'5px', borderRadius:'50%', flexShrink:0 },
+  navPipEdu: { background:'var(--edu)' },
+  navPipStu: { background:'var(--stu)' },
+
+  foot: { borderTop:'1px solid var(--border)', paddingTop:'14px', display:'flex', flexDirection:'column', gap:'10px' },
+  userRow: { display:'flex', alignItems:'center', gap:'10px', padding:'6px 8px', borderRadius:'var(--r)' },
+  avatar: { width:'30px', height:'30px', borderRadius:'8px', display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:'12px', fontWeight:'800', flexShrink:0, fontFamily:'var(--font-head)' },
+  avatarEdu: { background:'linear-gradient(135deg,#f59e0b,#d97706)' },
+  avatarStu: { background:'linear-gradient(135deg,#818cf8,#6366f1)' },
+  userInfo: { flex:1, overflow:'hidden' },
+  userName: { color:'var(--text)', fontSize:'13px', fontWeight:'600', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' },
+  userMeta: { color:'var(--text4)', fontSize:'11px', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' },
+  logoutBtn: { display:'flex', alignItems:'center', gap:'7px', background:'transparent', border:'1px solid var(--border)', borderRadius:'var(--r)', color:'var(--text3)', fontSize:'12px', padding:'8px 12px', transition:'all 0.15s', width:'100%', fontFamily:'var(--font-body)', fontWeight:'500' },
+
+  main: { marginLeft:'240px', flex:1, minHeight:'100vh', background:'var(--bg)' },
+  mainInner: { maxWidth:'1080px', margin:'0 auto', padding:'44px 44px' },
 }

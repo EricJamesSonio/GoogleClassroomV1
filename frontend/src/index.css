@@ -1,33 +1,141 @@
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Geist+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Warm dark palette — not cold blue-black */
+  --bg:         #0c0b0f;
+  --bg2:        #111018;
+  --bg3:        #17151f;
+  --bg4:        #1e1b28;
+  --surface:    rgba(255,255,255,0.03);
+  --surface2:   rgba(255,255,255,0.06);
+  --border:     rgba(255,255,255,0.06);
+  --border2:    rgba(255,255,255,0.1);
+  --border3:    rgba(255,255,255,0.16);
+
+  /* Text */
+  --text:       #eeecf5;
+  --text2:      rgba(238,236,245,0.55);
+  --text3:      rgba(238,236,245,0.3);
+  --text4:      rgba(238,236,245,0.15);
+
+  /* Educator accent — warm amber/gold */
+  --edu:        #f59e0b;
+  --edu2:       #fcd34d;
+  --edu-bg:     rgba(245,158,11,0.08);
+  --edu-border: rgba(245,158,11,0.2);
+
+  /* Student accent — cool indigo */
+  --stu:        #818cf8;
+  --stu2:       #a5b4fc;
+  --stu-bg:     rgba(129,140,248,0.08);
+  --stu-border: rgba(129,140,248,0.2);
+
+  /* Status */
+  --green:      #4ade80;
+  --green-bg:   rgba(74,222,128,0.08);
+  --red:        #f87171;
+  --red-bg:     rgba(248,113,113,0.08);
+  --yellow:     #fbbf24;
+  --blue:       #38bdf8;
+
+  /* Fonts */
+  --font-head:  'Outfit', sans-serif;
+  --font-body:  'Plus Jakarta Sans', sans-serif;
+  --font-mono:  'Geist Mono', monospace;
+
+  /* Radii */
+  --r-sm:  6px;
+  --r:     10px;
+  --r-md:  14px;
+  --r-lg:  20px;
+  --r-xl:  28px;
+
+  /* Shadows */
+  --shadow:    0 4px 24px rgba(0,0,0,0.35);
+  --shadow-lg: 0 16px 48px rgba(0,0,0,0.55);
+  --shadow-xl: 0 32px 80px rgba(0,0,0,0.7);
+  --glow-edu:  0 0 32px rgba(245,158,11,0.12);
+  --glow-stu:  0 0 32px rgba(129,140,248,0.12);
 }
+
+html { font-size: 16px; scroll-behavior: smooth; }
 
 body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  line-height: 1.6;
+  font-size: 15px;
 }
 
-input::placeholder { color: rgba(255,255,255,0.25); }
-input:focus {
-  border-color: rgba(102,126,234,0.6) !important;
-  box-shadow: 0 0 0 3px rgba(102,126,234,0.15);
+input, textarea, button, select { font-family: var(--font-body); }
+button { cursor: pointer; }
+a { text-decoration: none; }
+
+input::placeholder, textarea::placeholder { color: var(--text4); }
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--stu) !important;
+  box-shadow: 0 0 0 3px rgba(129,140,248,0.12) !important;
 }
 
-button:hover { transform: translateY(-1px); }
-button:active { transform: translateY(0); }
-
-/* scrollbar */
-::-webkit-scrollbar { width: 4px; }
+/* Scrollbar */
+::-webkit-scrollbar { width: 3px; height: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.15); }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+/* ── Animations ─────────────────────────────────────────── */
+@keyframes spin    { to { transform: rotate(360deg); } }
+@keyframes fadeUp  { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeIn  { from { opacity:0; } to { opacity:1; } }
+@keyframes slideIn { from { opacity:0; transform:translateX(-12px); } to { opacity:1; transform:translateX(0); } }
+@keyframes pulse   { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+@keyframes blink   { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(0.85); } }
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes gradientShift {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
+/* ── Utility classes ────────────────────────────────────── */
+.fade-up  { animation: fadeUp  0.45s cubic-bezier(0.16,1,0.3,1) both; }
+.fade-in  { animation: fadeIn  0.3s ease both; }
+.slide-in { animation: slideIn 0.3s ease both; }
+
+/* Staggered children */
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 60ms; }
+.stagger > *:nth-child(3) { animation-delay: 120ms; }
+.stagger > *:nth-child(4) { animation-delay: 180ms; }
+.stagger > *:nth-child(5) { animation-delay: 240ms; }
+.stagger > *:nth-child(6) { animation-delay: 300ms; }
+
+/* ── Global noise overlay ──────────────────────────────── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.6;
+}
+
+/* ── Skeleton loading ──────────────────────────────────── */
+.skeleton {
+  background: linear-gradient(90deg, var(--bg3) 25%, var(--bg4) 50%, var(--bg3) 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease infinite;
+  border-radius: var(--r);
 }
